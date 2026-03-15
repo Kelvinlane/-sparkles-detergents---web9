@@ -1,0 +1,107 @@
+<!-- Hero Image Section -->
+<div class="w-full h-auto mb-12 fade-in">
+    <img src="https://kimi-web-img.moonshot.cn/img/i.imgur.com/5e9d2b7e3f2d4c6a8b1e5f8c3a7b4d2e.jpg"
+         alt="Sparkles Detergents Banner"
+         class="w-full h-auto object-cover shadow-lg"
+         onerror="this.src='https://placehold.co/1920x600/1e3a8a/ffffff?text=Sparkles+Detergents+Banner'">
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold text-center mb-12 text-blue-900">Featured Products</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Liquid Laundry -->
+        <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group">
+            <div class="relative h-48 overflow-hidden bg-gray-100 cursor-pointer" onclick="openProductModal(1)">
+                <img src="https://placehold.co/400x600/3b82f6/ffffff?text=Laundry"
+                     class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">
+                    5L
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-gray-800 cursor-pointer hover:text-blue-600"
+                        onclick="openProductModal(1)">
+                        Liquid Laundry
+                    </h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">
+                    Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.
+                </p>
+                <div class="mt-auto flex items-center justify-between">
+                    <span class="text-2xl font-bold text-blue-600">Ksh 600</span>
+                    <button onclick="addToCart(1)"
+                            class="bg-blue-100 text-blue-600 p-3 rounded-full hover:bg-blue-600 hover:text-white transition">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hair Shampoo -->
+        <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group">
+            <div class="relative h-48 overflow-hidden bg-gray-100 cursor-pointer" onclick="openProductModal(2)">
+                <img src="https://placehold.co/400x600/10b981/ffffff?text=Shampoo"
+                     class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">
+                    5L
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-gray-800 cursor-pointer hover:text-blue-600"
+                        onclick="openProductModal(2)">
+                        Hair Shampoo
+                    </h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">
+                    Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.
+                </p>
+                <div class="mt-auto flex items-center justify-between">
+                    <span class="text-2xl font-bold text-blue-600">Ksh 699</span>
+                    <button onclick="addToCart(2)"
+                            class="bg-blue-100 text-blue-600 p-3 rounded-full hover:bg-blue-600 hover:text-white transition">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shower Gel -->
+        <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group">
+            <div class="relative h-48 overflow-hidden bg-gray-100 cursor-pointer" onclick="openProductModal(3)">
+                <img src="https://placehold.co/400x600/0ea5e9/ffffff?text=Shower+Gel"
+                     class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">
+                    5L
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-gray-800 cursor-pointer hover:text-blue-600"
+                        onclick="openProductModal(3)">
+                        Shower Gel
+                    </h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">
+                    Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.
+                </p>
+                <div class="mt-auto flex items-center justify-between">
+                    <span class="text-2xl font-bold text-blue-600">Ksh 749</span>
+                    <button onclick="addToCart(3)"
+                            class="bg-blue-100 text-blue-600 p-3 rounded-full hover:bg-blue-600 hover:text-white transition">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-12">
+        <button onclick="router('detergents')"
+                class="border-2 border-blue-900 text-blue-900 px-8 py-3 rounded-full font-bold hover:bg-blue-900 hover:text-white transition">
+            View All Products
+        </button>
+    </div>
+</div>
+

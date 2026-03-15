@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Database & env
+data.db
+backend/data.db
+.env
+.env.local
+*.env
+
+# Firebase key (use env var on Render instead)
+sparkles-shop-firebase-adminsdk-*.json
+backend/sparkles-shop-firebase-adminsdk-*.json
+
+# OS & editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log

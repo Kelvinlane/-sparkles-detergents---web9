@@ -1,0 +1,14 @@
+{
+  "name": "sparkles-detergents",
+  "version": "1.0.0",
+  "description": "Sparkles Detergents — backend + frontend",
+  "private": true,
+  "scripts": {
+    "start": "node backend/server.js",
+    "backend": "cd backend && npm run start",
+    "install:backend": "cd backend && npm install"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
