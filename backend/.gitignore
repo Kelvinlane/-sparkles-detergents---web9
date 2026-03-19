@@ -3,3 +3,4 @@ data.db
 *.log
 .env
 .env.local
+sparkles-shop-firebase-adminsdk-*.json
