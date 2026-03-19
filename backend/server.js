@@ -1,11 +1,12 @@
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const admin = require('firebase-admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+require('dotenv').config();
 
 // Serve frontend from ../frontend (so backend and frontend are separate folders)
 const frontendPath = path.join(__dirname, '..', 'frontend');
@@ -36,89 +37,76 @@ admin.initializeApp({
 const firestore = admin.firestore();
 console.log('Connected to Firestore');
 
-// SQLite database lives in backend folder
-const dbPath = path.join(__dirname, 'data.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error opening database:', err);
-    } else {
-        console.log('Connected to SQLite database');
-        initializeDatabase();
+// ==================== FIRESTORE COLLECTION REFS ====================
+const usersRef = firestore.collection('users');
+const ordersRef = firestore.collection('orders');
+const productsRef = firestore.collection('products');
+
+// Ensure default admin user exists in Firestore
+async function ensureDefaultAdmin() {
+    try {
+        const snap = await usersRef.where('email', '==', 'admin@sparkles.com').limit(1).get();
+        if (snap.empty) {
+            await usersRef.add({
+                name: 'Administrator',
+                email: 'admin@sparkles.com',
+                phone: '0759102078',
+                password: 'admin123',
+                created_at: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log('Default admin created in Firestore: admin@sparkles.com / admin123');
+        }
+    } catch (e) {
+        console.error('Failed to ensure default admin:', e.message);
+    }
+}
+
+// ==================== API ROUTES (AUTH) ====================
+
+app.post('/api/register', async (req, res) => {
+    const { name, email, phone, password } = req.body;
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Name, email, and password are required' });
+    }
+    try {
+        const existing = await usersRef.where('email', '==', email).limit(1).get();
+        if (!existing.empty) {
+            return res.status(400).json({ error: 'Email already exists' });
+        }
+        const doc = await usersRef.add({
+            name,
+            email,
+            phone: phone || '',
+            password,
+            created_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+        res.json({ success: true, userId: doc.id });
+    } catch (err) {
+        console.error('Register error:', err);
+        res.status(500).json({ error: 'Failed to register user' });
     }
 });
 
-// Create Tables
-function initializeDatabase() {
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            phone TEXT,
-            password TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id TEXT UNIQUE NOT NULL,
-            customer_name TEXT NOT NULL,
-            customer_phone TEXT NOT NULL,
-            customer_email TEXT,
-            total_amount INTEGER NOT NULL,
-            status TEXT DEFAULT 'pending',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    db.run(`
-        CREATE TABLE IF NOT EXISTS order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id INTEGER,
-            product_name TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            price INTEGER NOT NULL,
-            FOREIGN KEY (order_id) REFERENCES orders(id)
-        )
-    `);
-
-    db.get("SELECT * FROM users WHERE email = 'admin@sparkles.com'", (err, row) => {
-        if (!row) {
-            db.run("INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)",
-                ['Administrator', 'admin@sparkles.com', '0759102078', 'admin123']);
-            console.log('Default admin created: admin@sparkles.com / admin123');
-        }
-    });
-}
-
-// ==================== API ROUTES ====================
-
-app.post('/api/register', (req, res) => {
-    const { name, email, phone, password } = req.body;
-    db.run("INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)",
-        [name, email, phone, password],
-        function(err) {
-            if (err) {
-                res.status(400).json({ error: 'Email already exists' });
-            } else {
-                res.json({ success: true, userId: this.lastID });
-            }
-        });
-});
-
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
-    db.get("SELECT * FROM users WHERE email = ? AND password = ?",
-        [email, password],
-        (err, row) => {
-            if (row) {
-                res.json({ success: true, user: row });
-            } else {
-                res.status(401).json({ error: 'Invalid credentials' });
-            }
-        });
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+    try {
+        const snap = await usersRef
+            .where('email', '==', email)
+            .where('password', '==', password)
+            .limit(1)
+            .get();
+        if (snap.empty) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        const doc = snap.docs[0];
+        res.json({ success: true, user: { id: doc.id, ...doc.data() } });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ error: 'Failed to login' });
+    }
 });
 
 // ORDER Routes (Customer)
@@ -168,76 +156,89 @@ app.post('/api/orders', async (req, res) => {
             }
         });
 
-        db.run(
-            "INSERT INTO orders (order_id, customer_name, customer_phone, customer_email, total_amount, status) VALUES (?, ?, ?, ?, ?, ?)",
-            [orderId, customer_name, customer_phone, customer_email || '', parseInt(total_amount, 10) || 0, 'completed'],
-            function (err) {
-                if (err) {
-                    console.error('SQLite error:', err);
-                    return res.status(500).json({ error: 'Order saved but database error occurred' });
-                }
+        // Save order in Firestore
+        const orderDoc = {
+            order_id: orderId,
+            customer_name,
+            customer_phone,
+            customer_email: customer_email || '',
+            total_amount: parseInt(total_amount, 10) || 0,
+            status: 'completed',
+            items: safeItems.map(i => ({
+                id: i.id,
+                name: i.name,
+                qty: i.qty,
+                price: i.price
+            })),
+            created_at: admin.firestore.FieldValue.serverTimestamp()
+        };
+        await ordersRef.doc(orderId).set(orderDoc);
 
-                const newOrderId = this.lastID;
-                const stmt = db.prepare("INSERT INTO order_items (order_id, product_name, quantity, price) VALUES (?, ?, ?, ?)");
-                safeItems.forEach((item) => {
-                    stmt.run(newOrderId, item.name, item.qty, item.price);
-                });
-                stmt.finalize();
-
-                res.json({ success: true, order_id: orderId });
-            }
-        );
-
+        res.json({ success: true, order_id: orderId });
     } catch (err) {
         console.error('Order error:', err);
         res.status(400).json({ error: err.message || 'Failed to place order' });
     }
 });
 
-// ADMIN Routes
-app.get('/api/admin/orders', (req, res) => {
-    db.all(`
-        SELECT o.*,
-               GROUP_CONCAT(oi.product_name || ' (x' || oi.quantity || ')', ', ') as items
-        FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
-        GROUP BY o.id
-        ORDER BY o.created_at DESC
-    `, [], (err, rows) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(rows);
-        }
-    });
-});
-
-app.get('/api/admin/stats', (req, res) => {
-    db.get("SELECT COUNT(*) as total_orders, SUM(total_amount) as total_revenue FROM orders", [], (err, row) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(row);
-        }
-    });
-});
-
-app.get('/api/admin/order/:id', (req, res) => {
-    const orderId = req.params.id;
-    db.get("SELECT * FROM orders WHERE id = ?", [orderId], (err, order) => {
-        if (err || !order) {
-            res.status(404).json({ error: 'Order not found' });
-            return;
-        }
-
-        db.all("SELECT * FROM order_items WHERE order_id = ?", [orderId], (err, items) => {
-            res.json({ ...order, items });
+// ==================== ADMIN ORDER ROUTES (Firestore) ====================
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const snap = await ordersRef.orderBy('created_at', 'desc').get();
+        const orders = snap.docs.map(d => {
+            const data = d.data();
+            const itemsArr = Array.isArray(data.items) ? data.items : [];
+            const itemsDisplay = itemsArr.map(it => `${it.name} (x${it.qty})`).join(', ');
+            return {
+                id: d.id,
+                order_id: data.order_id || d.id,
+                customer_name: data.customer_name,
+                customer_phone: data.customer_phone,
+                customer_email: data.customer_email || '',
+                total_amount: data.total_amount || 0,
+                status: data.status || 'pending',
+                created_at: data.created_at ? data.created_at.toDate() : new Date(0),
+                items: itemsDisplay
+            };
         });
-    });
+        res.json(orders);
+    } catch (err) {
+        console.error('Admin orders error:', err);
+        res.status(500).json({ error: err.message || 'Failed to load orders' });
+    }
 });
 
-// ==================== PRODUCTS (Firestore) ====================
-const productsRef = firestore.collection('products');
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const snap = await ordersRef.get();
+        let totalOrders = 0;
+        let totalRevenue = 0;
+        snap.forEach(d => {
+            totalOrders += 1;
+            const data = d.data();
+            totalRevenue += Number(data.total_amount || 0);
+        });
+        res.json({ total_orders: totalOrders, total_revenue: totalRevenue });
+    } catch (err) {
+        console.error('Admin stats error:', err);
+        res.status(500).json({ error: err.message || 'Failed to load stats' });
+    }
+});
+
+app.get('/api/admin/order/:id', async (req, res) => {
+    const orderId = req.params.id;
+    try {
+        const doc = await ordersRef.doc(orderId).get();
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        const data = doc.data();
+        res.json({ id: doc.id, ...data });
+    } catch (err) {
+        console.error('Admin order detail error:', err);
+        res.status(500).json({ error: err.message || 'Failed to load order' });
+    }
+});
 
 async function seedProductsIfEmpty() {
     const snap = await productsRef.limit(1).get();
@@ -326,6 +327,7 @@ app.delete('/api/admin/products/:id', async (req, res) => {
 });
 
 seedProductsIfEmpty().catch(console.error);
+ensureDefaultAdmin().catch(console.error);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
