@@ -10,7 +10,14 @@ require('dotenv').config();
 
 // Serve frontend from ../frontend (so backend and frontend are separate folders)
 const frontendPath = path.join(__dirname, '..', 'frontend');
-app.use(cors());
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || '';
+app.use(cors({
+    // Temporary default: allow all origins until deployed domains are known.
+    // For production, set FRONTEND_ORIGIN to your Render static-site URL.
+    origin: FRONTEND_ORIGIN || true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static(frontendPath));
 

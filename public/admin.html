@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkles Admin | Order Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
+            <h1 class="text-2xl font-bold text-blue-900 mb-6 text-center">Admin Login</h1>
+            <form id="admin-login-form" class="space-y-4">
+                <input type="email" id="admin-email" placeholder="Email" value="admin@sparkles.com" 
+                       class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="password" id="admin-password" placeholder="Password" value="admin123"
+                       class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                    Login
+                </button>
+            </form>
+            <p class="text-center text-sm text-gray-500 mt-4">Default: admin@sparkles.com / admin123</p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden min-h-screen">
+        <nav class="bg-blue-900 text-white p-4">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <h1 class="text-xl font-bold"><i class="fas fa-cog mr-2"></i>Sparkles Admin</h1>
+                <div class="flex items-center gap-4">
+                    <button onclick="showTab('orders')" id="tab-orders" class="px-4 py-2 rounded bg-blue-800">Orders</button>
+                    <button onclick="showTab('products')" id="tab-products" class="px-4 py-2 rounded hover:bg-blue-800">Products</button>
+                    <button onclick="logout()" class="bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto p-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Orders</p>
+                            <p id="stat-orders" class="text-3xl font-bold text-blue-900">0</p>
+                        </div>
+                        <div class="bg-blue-100 p-4 rounded-full text-blue-600">
+                            <i class="fas fa-shopping-bag text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Revenue</p>
+                            <p id="stat-revenue" class="text-3xl font-bold text-green-600">Ksh 0</p>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-full text-green-600">
+                            <i class="fas fa-money-bill-wave text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Database Status</p>
+                            <p class="text-3xl font-bold text-purple-600">Active</p>
+                        </div>
+                        <div class="bg-purple-100 p-4 rounded-full text-purple-600">
+                            <i class="fas fa-database text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div id="section-orders" class="space-y-6">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="p-6 border-b flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800">All Orders</h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportToCSV()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                            <i class="fas fa-download mr-2"></i>Export CSV
+                        </button>
+                        <button onclick="loadOrders()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-gray-200">
+                            <!-- Orders loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+
+            <!-- Products Section -->
+            <div id="section-products" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-6 border-b flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-800">Products & Stock</h2>
+                        <button onclick="openAddProductModal()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                            <i class="fas fa-plus mr-2"></i>Add Product
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="product-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+            <h2 id="product-modal-title" class="text-2xl font-bold text-blue-900 mb-6">Add Product</h2>
+            <form id="product-form" onsubmit="saveProduct(event)" class="space-y-4">
+                <input type="hidden" id="product-id">
+                <input type="text" id="product-name" placeholder="Product Name" required class="w-full px-4 py-3 rounded-lg border">
+                <input type="number" id="product-price" placeholder="Price (Ksh)" required min="0" class="w-full px-4 py-3 rounded-lg border">
+                <input type="number" id="product-stock" placeholder="Stock" min="0" value="0" class="w-full px-4 py-3 rounded-lg border">
+                <input type="text" id="product-image" placeholder="Image URL" class="w-full px-4 py-3 rounded-lg border">
+                <input type="text" id="product-category" placeholder="Category" class="w-full px-4 py-3 rounded-lg border">
+                <textarea id="product-desc" placeholder="Description" rows="3" class="w-full px-4 py-3 rounded-lg border"></textarea>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold">Save</button>
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-3 rounded-lg border">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = (() => {
+            const fallback = 'http://localhost:3000/api';
+            try {
+                const { protocol, origin, hostname, port } = window.location;
+                if (protocol === 'file:' || origin === 'null' || !origin) return fallback;
+
+                // If you're using VS Code "Live Server" (usually :5500), the API is still on :3000.
+                const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+                if (isLocalHost && port && port !== '3000') return fallback;
+
+                return origin + '/api';
+            } catch {
+                return fallback;
+            }
+        })();
+
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    loadStats();
+                    loadOrders();
+                    loadProducts();
+                } else {
+                    alert('Invalid credentials');
+                }
+            } catch (err) {
+                console.error('Admin login failed', err);
+                alert(`Server error. Make sure backend is running and open admin from http://localhost:3000/admin.html\n\nAPI: ${API_URL}`);
+            }
+        });
+
+        function logout() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/admin/stats`);
+                const data = await res.json();
+                document.getElementById('stat-orders').textContent = data.total_orders || 0;
+                document.getElementById('stat-revenue').textContent = 'Ksh ' + (data.total_revenue || 0).toLocaleString();
+            } catch (err) {
+                console.error('Failed to load stats');
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const res = await fetch(`${API_URL}/admin/orders`);
+                const orders = await res.json();
+                
+                const tbody = document.getElementById('orders-table-body');
+                if(orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No orders yet</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = orders.map(order => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-mono text-sm text-blue-600">${order.order_id}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900">${order.customer_name}</div>
+                            <div class="text-sm text-gray-500">${order.customer_phone}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title="${order.items}">
+                            ${order.items || 'No items'}
+                        </td>
+                        <td class="px-6 py-4 font-bold text-green-600">Ksh ${order.total_amount}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            ${new Date(order.created_at).toLocaleString()}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-bold rounded-full ${
+                                order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }">
+                                ${order.status}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load orders');
+                document.getElementById('orders-table-body').innerHTML = 
+                    '<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Error loading orders</td></tr>';
+            }
+        }
+
+        function showTab(tab) {
+            document.getElementById('tab-orders').classList.toggle('bg-blue-800', tab === 'orders');
+            document.getElementById('tab-products').classList.toggle('bg-blue-800', tab === 'products');
+            document.getElementById('section-orders').classList.toggle('hidden', tab !== 'orders');
+            document.getElementById('section-products').classList.toggle('hidden', tab !== 'products');
+            if (tab === 'products') loadProducts();
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_URL}/admin/products`);
+                const products = await res.json();
+                const tbody = document.getElementById('products-table-body');
+                if (!products.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No products. Click Add Product.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = products.map(p => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900">${p.name}</div>
+                            <div class="text-sm text-gray-500 truncate max-w-xs">${p.desc || ''}</div>
+                        </td>
+                        <td class="px-6 py-4 font-bold text-green-600">Ksh ${p.price}</td>
+                        <td class="px-6 py-4">
+                            <input type="number" value="${p.stock || 0}" min="0" 
+                                onchange="updateStock('${p.id}', this.value)" 
+                                class="w-20 px-2 py-1 border rounded text-sm">
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${p.category || '-'}</td>
+                        <td class="px-6 py-4">
+                            <button onclick="openEditProductModal(${p.id})" class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteProduct(${p.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load products');
+                document.getElementById('products-table-body').innerHTML = 
+                    '<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Error loading products</td></tr>';
+            }
+        }
+
+        function openAddProductModal() {
+            document.getElementById('product-modal-title').textContent = 'Add Product';
+            document.getElementById('product-id').value = '';
+            document.getElementById('product-form').reset();
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function openEditProductModal(id) {
+            fetch(`${API_URL}/admin/products`).then(r => r.json()).then(products => {
+                const p = products.find(x => x.id == id);
+                if (!p) return;
+                document.getElementById('product-modal-title').textContent = 'Edit Product';
+                document.getElementById('product-id').value = p.id;
+                document.getElementById('product-name').value = p.name;
+                document.getElementById('product-price').value = p.price;
+                document.getElementById('product-stock').value = p.stock || 0;
+                document.getElementById('product-image').value = p.image || '';
+                document.getElementById('product-category').value = p.category || '';
+                document.getElementById('product-desc').value = p.desc || '';
+                document.getElementById('product-modal').classList.remove('hidden');
+            });
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('product-id').value;
+            const data = {
+                name: document.getElementById('product-name').value,
+                price: document.getElementById('product-price').value,
+                stock: document.getElementById('product-stock').value,
+                image: document.getElementById('product-image').value,
+                category: document.getElementById('product-category').value,
+                desc: document.getElementById('product-desc').value
+            };
+            try {
+                const url = id ? `${API_URL}/admin/products/${id}` : `${API_URL}/admin/products`;
+                const res = await fetch(url, {
+                    method: id ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeProductModal();
+                    loadProducts();
+                } else {
+                    alert(result.error || 'Failed to save');
+                }
+            } catch (err) {
+                alert('Server error');
+            }
+        }
+
+        async function updateStock(id, stock) {
+            try {
+                const res = await fetch(`${API_URL}/admin/products/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock: parseInt(stock) || 0 })
+                });
+                if ((await res.json()).success) {
+                    loadProducts();
+                }
+            } catch (err) {
+                console.error('Failed to update stock');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Delete this product?')) return;
+            try {
+                const res = await fetch(`${API_URL}/admin/products/${id}`, { method: 'DELETE' });
+                if ((await res.json()).success) {
+                    loadProducts();
+                }
+            } catch (err) {
+                alert('Failed to delete');
+            }
+        }
+
+        function exportToCSV() {
+            const rows = document.querySelectorAll('#orders-table-body tr');
+            if(rows.length === 0 || rows[0].innerText.includes('No orders')) {
+                alert('No orders to export');
+                return;
+            }
+            
+            let csv = 'Order ID,Customer,Phone,Items,Total,Date,Status\n';
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if(cells.length > 1) {
+                    const values = Array.from(cells).map(c => `"${c.innerText.replace(/"/g, '""')}"`);
+                    csv += values.join(',') + '\n';
+                }
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sparkles-orders-' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkles Detergents | Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="common.css" rel="stylesheet">
+    <link href="home.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 relative">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center cursor-pointer" onclick="window.location.href='index.html'">
+                    <div class="logo-s mr-3">
+                        <div class="s-top"></div>
+                        <div class="s-bottom"></div>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-900 tracking-tight">Sparkles</span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="index.html" class="cursor-pointer hover:text-blue-600 font-medium transition text-blue-600">Home</a>
+                    <a href="detergents.html" class="cursor-pointer hover:text-blue-600 font-medium transition">Detergents</a>
+                    <a href="about.html" class="cursor-pointer hover:text-blue-600 font-medium transition">About</a>
+                    <a href="contact.html" class="cursor-pointer hover:text-blue-600 font-medium transition">Contact</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleCart()" class="relative p-2 hover:bg-blue-50 rounded-full transition">
+                        <i class="fas fa-shopping-cart text-xl text-blue-900"></i>
+                        <span id="cart-count" class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center transform scale-0 transition-transform duration-200">0</span>
+                    </button>
+                    <button onclick="toggleAuthModal()" class="p-2 hover:bg-blue-50 rounded-full transition" title="Login/Register">
+                        <i class="fas fa-user text-xl text-blue-900"></i>
+                    </button>
+                    <button class="md:hidden p-2" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                        <i class="fas fa-bars text-xl text-blue-900"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <a href="index.html" class="block px-4 py-2 hover:bg-blue-50">Home</a>
+            <a href="detergents.html" class="block px-4 py-2 hover:bg-blue-50">Detergents</a>
+            <a href="about.html" class="block px-4 py-2 hover:bg-blue-50">About</a>
+            <a href="contact.html" class="block px-4 py-2 hover:bg-blue-50">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="app" class="pt-20 min-h-screen pb-20">
+        <!-- Hero Image Section -->
+        <div class="w-full h-auto mb-12 fade-in">
+            <img src="heroimage.png"
+                 alt="Sparkles Detergents"
+                 class="w-full h-auto object-cover shadow-lg"
+                 onerror="this.src='https://placehold.co/1920x600/1e3a8a/ffffff?text=Sparkles+Detergents+Banner'">
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <h2 class="text-3xl font-bold text-center mb-12 text-blue-900">Featured Products</h2>
+            <div id="featured-products-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="col-span-full text-center py-8 text-gray-500">Loading products...</div>
+            </div>
+            <div class="text-center mt-12">
+                <a href="detergents.html" class="inline-block border-2 border-blue-900 text-blue-900 px-8 py-3 rounded-full font-bold hover:bg-blue-900 hover:text-white transition">View All Products</a>
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed bottom-8 right-8 flex flex-col space-y-2 z-40 no-print">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition transform hover:scale-110"><i class="fas fa-arrow-up"></i></button>
+        <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition transform hover:scale-110"><i class="fas fa-arrow-down"></i></button>
+    </div>
+
+    <!-- Cart Drawer -->
+    <div id="cart-overlay" onclick="toggleCart()" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity opacity-0"></div>
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white z-50 shadow-2xl cart-slide cart-hidden flex flex-col">
+        <div class="p-6 border-b flex justify-between items-center bg-blue-900 text-white">
+            <h2 class="text-xl font-bold">Your Cart</h2>
+            <button onclick="toggleCart()" class="hover:text-gray-300"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <div class="text-center text-gray-500 mt-10">Your cart is empty</div>
+        </div>
+        <div class="p-6 border-t bg-gray-50">
+            <div class="flex justify-between mb-4 text-lg font-bold text-blue-900">
+                <span>Total:</span>
+                <span id="cart-total">Ksh 0</span>
+            </div>
+            <button id="order-now-btn" onclick="initiateCheckout()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg flex justify-center items-center gap-2 disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed disabled:shadow-none" disabled><i class="fas fa-shopping-bag"></i> Order Now</button>
+            <button onclick="window.print()" class="w-full mt-2 bg-gray-200 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-300 transition text-sm">Print Receipt</button>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="product-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl transform transition-all scale-95 opacity-0" id="product-modal-content">
+            <div class="grid md:grid-cols-2">
+                <div class="h-64 md:h-auto bg-gray-100 flex items-center justify-center p-6">
+                    <img id="modal-img" src="" class="max-h-full object-contain drop-shadow-lg">
+                </div>
+                <div class="p-8 flex flex-col justify-center">
+                    <div class="flex justify-between items-start">
+                        <h2 id="modal-title" class="text-3xl font-bold text-blue-900 mb-2"></h2>
+                        <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-2xl"></i></button>
+                    </div>
+                    <p id="modal-price" class="text-2xl text-green-600 font-bold mb-4"></p>
+                    <p id="modal-desc" class="text-gray-600 mb-6 leading-relaxed"></p>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 text-sm text-gray-500"><i class="fas fa-check-circle text-blue-500"></i> 5 Litres Container</div>
+                        <div class="flex items-center gap-2 text-sm text-gray-500"><i class="fas fa-check-circle text-blue-500"></i> Free Delivery in Nairobi</div>
+                    </div>
+                    <button id="modal-add-btn" class="mt-8 w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg flex justify-center items-center gap-2"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Checkout Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl relative">
+            <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold text-blue-900 mb-6 text-center">Complete Your Order</h2>
+            <form id="order-form" onsubmit="submitOrder(event)" class="space-y-4">
+                <input type="text" id="order-name" placeholder="Full Name" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="tel" id="order-phone" placeholder="Phone Number (07...)" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="email" id="order-email" placeholder="Email (optional)" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="submit" id="order-submit-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition flex justify-center items-center gap-2">
+                    <i class="fas fa-check"></i> Place Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl relative">
+            <button onclick="toggleAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold text-blue-900 mb-6 text-center">Welcome to Sparkles</h2>
+            <div class="flex mb-6 border-b">
+                <button onclick="switchAuthTab('login')" id="tab-login" class="flex-1 pb-2 font-semibold text-blue-600 border-b-2 border-blue-600">Login</button>
+                <button onclick="switchAuthTab('register')" id="tab-register" class="flex-1 pb-2 font-semibold text-gray-400">Register</button>
+            </div>
+            <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-4">
+                <input type="email" placeholder="Email Address" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="password" placeholder="Password" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">Login</button>
+            </form>
+            <form id="register-form" onsubmit="handleAuth(event, 'register')" class="space-y-4 hidden">
+                <input type="text" placeholder="Full Name" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="email" placeholder="Email Address" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="tel" placeholder="Phone Number (07...)" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="password" placeholder="Password" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-white z-[60] hidden overflow-y-auto">
+        <div class="max-w-md mx-auto p-8 border-2 border-dashed border-gray-300 m-4">
+            <div class="text-center mb-6">
+                <div class="flex justify-center mb-2"><div class="logo-s"><div class="s-top"></div><div class="s-bottom"></div></div></div>
+                <h1 class="text-2xl font-bold text-blue-900">Sparkles Detergents</h1>
+                <p class="text-sm text-gray-500">Nairobi, Kenya</p>
+                <p class="text-sm text-gray-500">Tel: 0759 102 078</p>
+            </div>
+            <div class="border-t border-b border-gray-300 py-4 my-4">
+                <div class="flex justify-between mb-2"><span>Date:</span><span id="receipt-date"></span></div>
+                <div class="flex justify-between mb-2"><span>Order ID:</span><span id="receipt-id">#ORD-2023-X</span></div>
+                <div class="flex justify-between"><span>Customer:</span><span id="receipt-customer">Guest</span></div>
+            </div>
+            <table class="w-full text-left mb-4">
+                <thead>
+                    <tr class="border-b">
+                        <th class="pb-2">Item</th>
+                        <th class="pb-2 text-center">Qty</th>
+                        <th class="pb-2 text-right">Price</th>
+                    </tr>
+                </thead>
+                <tbody id="receipt-items"></tbody>
+            </table>
+            <div class="border-t border-gray-300 pt-4 flex justify-between font-bold text-lg">
+                <span>TOTAL</span>
+                <span id="receipt-total">Ksh 0</span>
+            </div>
+            <div class="mt-8 text-center text-sm text-gray-500">
+                <p class="mt-2">Thank you for your business!</p>
+            </div>
+            <div class="mt-8 text-center no-print">
+                <button onclick="document.getElementById('receipt-modal').classList.add('hidden')" class="bg-gray-200 px-4 py-2 rounded mr-2">Close</button>
+                <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-blue-950 text-white pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <div class="logo-s mr-2" style="border-color: white;">
+                            <div class="s-top" style="border-color: white;"></div>
+                            <div class="s-bottom" style="border-color: white;"></div>
+                        </div>
+                        <span class="text-xl font-bold">Sparkles</span>
+                    </div>
+                    <p class="text-blue-200 text-sm">Premium cleaning solutions for your home and business. Quality guaranteed.</p>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-4 text-lg">Quick Links</h3>
+                    <ul class="space-y-2 text-blue-200">
+                        <li><a href="index.html" class="hover:text-white cursor-pointer">Home</a></li>
+                        <li><a href="detergents.html" class="hover:text-white cursor-pointer">Shop</a></li>
+                        <li><a href="about.html" class="hover:text-white cursor-pointer">About Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-4 text-lg">Products</h3>
+                    <ul class="space-y-2 text-blue-200">
+                        <li>Laundry Detergent</li>
+                        <li>Shampoo & Shower Gel</li>
+                        <li>Dish Washing Liquid</li>
+                        <li>Fabric Softener</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-4 text-lg">Contact Us</h3>
+                    <ul class="space-y-2 text-blue-200">
+                        <li><i class="fas fa-phone mr-2"></i> 0759 102 078</li>
+                        <li><i class="fas fa-phone mr-2"></i> 0790 669 692</li>
+                        <li><i class="fas fa-map-marker-alt mr-2"></i> Nairobi, Kenya</li>
+                        <li class="pt-2">
+                            <a href="https://wa.me/254759102078" target="_blank" class="inline-block bg-green-600 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-green-700 transition"><i class="fab fa-whatsapp mr-1"></i> Order via WhatsApp</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-blue-900 pt-8 text-center text-blue-300 text-sm">&copy; 2026 Sparkles Detergents. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = (() => {
+            const fallback = 'http://localhost:3000/api';
+            try {
+                const { protocol, origin, hostname, port } = window.location;
+                if (protocol === 'file:' || origin === 'null' || !origin) return fallback;
+                const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+                if (isLocalHost && port && port !== '3000') return fallback; // Live Server, etc.
+                return origin + '/api';
+            } catch {
+                return fallback;
+            }
+        })();
+
+        const DEFAULT_PRODUCTS = [
+            { id: 1, name: "Liquid Laundry", price: 600, image: "https://placehold.co/400x600/3b82f6/ffffff?text=Laundry", desc: "Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.", category: "Laundry", stock: 100 },
+            { id: 2, name: "Hair Shampoo", price: 699, image: "images/ChatGPT Image Feb 20, 2026, 11_37_30 AM.png", desc: "Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.", category: "Personal Care", stock: 80 },
+            { id: 3, name: "Shower Gel", price: 749, image: "images/Dofoto_20260106_130957947.jpg", desc: "Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.", category: "Personal Care", stock: 75 },
+            { id: 4, name: "Multi-purpose Detergent", price: 549, image: "Users\lanek\OneDrive\Desktop\web9\images\Dofoto_20260106_131334771.jpg", desc: "All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.", category: "Household", stock: 90 },
+            { id: 5, name: "Dish Washing Liquid", price: 449, image: "https://placehold.co/400x600/ef4444/ffffff?text=Dish+Wash", desc: "Cuts through grease instantly. Lemon fresh scent. 5 Litres.", category: "Kitchen", stock: 120 },
+            { id: 6, name: "Bleach", price: 499, image: "https://placehold.co/400x600/6366f1/ffffff?text=Bleach", desc: "Strong whitening and disinfecting action. 5 Litres.", category: "Laundry", stock: 85 },
+            { id: 7, name: "Fabric Softener", price: 900, image: "https://placehold.co/400x600/ec4899/ffffff?text=Softener", desc: "Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.", category: "Laundry", stock: 70 }
+        ];
+        let products = [...DEFAULT_PRODUCTS];
+        let cart = [];
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_URL}/products`);
+                const data = await res.json();
+                if (Array.isArray(data) && data.length) products = data;
+            } catch (e) { /* use defaults */ }
+            renderFeaturedProducts();
+        }
+        function renderFeaturedProducts() {
+            const grid = document.getElementById('featured-products-grid');
+            const featured = products.slice(0, 3);
+            grid.innerHTML = featured.map(p => `
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group">
+                    <div class="relative h-48 overflow-hidden bg-gray-100 cursor-pointer" onclick="openProductModal(${p.id})">
+                        <img src="${p.image || 'https://placehold.co/400x600/3b82f6/ffffff?text=Product'}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">5L</div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <h3 class="text-xl font-bold text-gray-800 cursor-pointer hover:text-blue-600" onclick="openProductModal(${p.id})">${p.name}</h3>
+                        <p class="text-gray-500 text-sm mb-4">${p.desc || ''}</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span class="text-2xl font-bold text-blue-600">Ksh ${p.price}</span>
+                            <button onclick="addToCart(${p.id})" ${((parseInt(p.stock, 10) || 0) <= 0) ? 'disabled' : ''} class="bg-blue-100 text-blue-600 p-3 rounded-full hover:bg-blue-600 hover:text-white transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-200 disabled:hover:text-gray-400"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div class="mt-2 text-xs ${((parseInt(p.stock, 10) || 0) <= 0) ? 'text-red-600' : 'text-gray-500'}">
+                            ${((parseInt(p.stock, 10) || 0) <= 0) ? 'Out of stock' : ('In stock: ' + (parseInt(p.stock, 10) || 0))}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        let currentUser = null;
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            const available = parseInt(product.stock, 10) || 0;
+            if (available <= 0) return alert("Out of stock");
+            const existing = cart.find(item => item.id === id);
+            const currentQty = existing ? existing.qty : 0;
+            if (currentQty + 1 > available) return alert(`Only ${available} in stock`);
+            if(existing) existing.qty++; else cart.push({...product, qty: 1});
+            updateCartUI();
+            toggleCart(true);
+        }
+        function removeFromCart(id) { cart = cart.filter(item => item.id !== id); updateCartUI(); }
+        function changeQty(id, change) {
+            const item = cart.find(i => i.id === id);
+            if(!item) return;
+            if (change > 0) {
+                const p = products.find(x => x.id === id);
+                const available = parseInt(p?.stock, 10) || 0;
+                if (item.qty + change > available) return alert(`Only ${available} in stock`);
+            }
+            item.qty += change;
+            if(item.qty <= 0) removeFromCart(id); else updateCartUI();
+        }
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const badge = document.getElementById('cart-count');
+            badge.innerText = count;
+            if(count === 0) badge.classList.add('scale-0'); else badge.classList.remove('scale-0');
+            const container = document.getElementById('cart-items');
+            if(cart.length === 0) container.innerHTML = '<div class="text-center text-gray-500 mt-10 flex flex-col items-center"><i class="fas fa-shopping-basket text-4xl mb-2 text-gray-300"></i>Your cart is empty</div>';
+            else container.innerHTML = cart.map(item => `
+                <div class="flex items-center gap-4 bg-white p-3 rounded-lg shadow-sm border">
+                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-md">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-sm text-gray-800">${item.name}</h4>
+                        <p class="text-blue-600 text-sm font-semibold">Ksh ${item.price}</p>
+                        <p class="text-xs text-gray-500">In stock: ${parseInt((products.find(p => p.id === item.id)?.stock), 10) || 0}</p>
+                    </div>
+                    <div class="flex items-center bg-gray-100 rounded-lg">
+                        <button onclick="changeQty(${item.id}, -1)" class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded-l-lg">-</button>
+                        <span class="px-2 text-sm font-bold w-8 text-center">${item.qty}</span>
+                        <button onclick="changeQty(${item.id}, 1)" class="px-3 py-1 text-gray-600 hover:bg-gray-200 rounded-r-lg">+</button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('cart-total').innerText = `Ksh ${total}`;
+            const orderBtn = document.getElementById('order-now-btn');
+            if (orderBtn) orderBtn.disabled = cart.length === 0;
+        }
+        function toggleCart(forceOpen = false) {
+            const drawer = document.getElementById('cart-drawer');
+            const overlay = document.getElementById('cart-overlay');
+            if (forceOpen || drawer.classList.contains('cart-hidden')) {
+                drawer.classList.remove('cart-hidden'); drawer.classList.add('cart-visible');
+                overlay.classList.remove('hidden'); setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                drawer.classList.add('cart-hidden'); drawer.classList.remove('cart-visible');
+                overlay.classList.add('opacity-0'); setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+        function openProductModal(id) {
+            const p = products.find(x => x.id === id);
+            document.getElementById('modal-img').src = p.image;
+            document.getElementById('modal-title').innerText = p.name;
+            document.getElementById('modal-price').innerText = `Ksh ${p.price}`;
+            document.getElementById('modal-desc').innerText = p.desc;
+            document.getElementById('modal-add-btn').onclick = () => { addToCart(p.id); closeProductModal(); };
+            const modal = document.getElementById('product-modal');
+            const content = document.getElementById('product-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
+        }
+        function closeProductModal() {
+            const content = document.getElementById('product-modal-content');
+            content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => document.getElementById('product-modal').classList.add('hidden'), 300);
+        }
+        function toggleAuthModal() { document.getElementById('auth-modal').classList.toggle('hidden'); }
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const loginTab = document.getElementById('tab-login');
+            const regTab = document.getElementById('tab-register');
+            if(tab === 'login') {
+                loginForm.classList.remove('hidden'); regForm.classList.add('hidden');
+                loginTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600'); loginTab.classList.remove('text-gray-400');
+                regTab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600'); regTab.classList.add('text-gray-400');
+            } else {
+                regForm.classList.remove('hidden'); loginForm.classList.add('hidden');
+                regTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600'); regTab.classList.remove('text-gray-400');
+                loginTab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600'); loginTab.classList.add('text-gray-400');
+            }
+        }
+        function handleAuth(e, type) {
+            e.preventDefault();
+            currentUser = { email: 'user@example.com', name: 'Customer' };
+            toggleAuthModal();
+            alert(type === 'login' ? 'Logged in successfully!' : 'Account created!');
+        }
+        function initiateCheckout() {
+            if(cart.length === 0) return alert("Cart is empty! Add products first.");
+            document.getElementById('order-modal').classList.remove('hidden');
+            if(currentUser) {
+                document.getElementById('order-name').value = currentUser.name || '';
+                document.getElementById('order-email').value = currentUser.email || '';
+            }
+        }
+        function closeOrderModal() { document.getElementById('order-modal').classList.add('hidden'); }
+        async function submitOrder(e) {
+            e.preventDefault();
+            const name = document.getElementById('order-name').value.trim();
+            const phone = document.getElementById('order-phone').value.trim();
+            const email = document.getElementById('order-email').value.trim() || '';
+            if(!name || !phone) return alert("Name and phone are required");
+            const btn = document.getElementById('order-submit-btn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+            btn.disabled = true;
+            const items = cart.map(item => ({ id: item.id, name: item.name, qty: item.qty, price: item.price }));
+            const total_amount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            try {
+                const res = await fetch(`${API_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email, items, total_amount })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    closeOrderModal();
+                    toggleCart();
+                    document.getElementById('receipt-id').innerText = '#' + data.order_id;
+                    document.getElementById('receipt-customer').innerText = name;
+                    document.getElementById('receipt-date').innerText = new Date().toLocaleString();
+                    document.getElementById('receipt-total').innerText = `Ksh ${total_amount}`;
+                    document.getElementById('receipt-items').innerHTML = cart.map(item =>
+                        `<tr><td class="py-2">${item.name}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right">Ksh ${item.price * item.qty}</td></tr>`
+                    ).join('');
+                    cart = [];
+                    updateCartUI();
+                    document.getElementById('receipt-modal').classList.remove('hidden');
+                    await loadProducts();
+                } else {
+                    alert(data.error || 'Failed to place order');
+                }
+            } catch(err) {
+                alert(`Server error. Please try again.\n\nAPI: ${API_URL}`);
+            }
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+        function showReceipt() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('receipt-date').innerText = new Date().toLocaleString();
+            document.getElementById('receipt-id').innerText = '#ORD-' + Math.floor(Math.random() * 10000);
+            document.getElementById('receipt-customer').innerText = currentUser ? currentUser.name : 'Guest';
+            document.getElementById('receipt-total').innerText = `Ksh ${total}`;
+            document.getElementById('receipt-items').innerHTML = cart.map(item => `
+                <tr><td class="py-2">${item.name}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right">Ksh ${item.price * item.qty}</td></tr>
+            `).join('');
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+        loadProducts().then(() => updateCartUI());
+    </script>
+</body>
+</html>
