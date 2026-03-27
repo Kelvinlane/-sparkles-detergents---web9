@@ -337,18 +337,7 @@
     </footer>
 
     <script>
-        const API_URL = (() => {
-            const fallback = 'http://localhost:3000/api';
-            try {
-                const { protocol, origin, hostname, port } = window.location;
-                if (protocol === 'file:' || origin === 'null' || !origin) return fallback;
-                const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
-                if (isLocalHost && port && port !== '3000') return fallback; // Live Server, etc.
-                return origin + '/api';
-            } catch {
-                return fallback;
-            }
-        })();
+        const API_URL = 'https://sparkles-detergents-web9-1.onrender.com/api';
 
         // --- Data & State ---
         const DEFAULT_PRODUCTS = [
