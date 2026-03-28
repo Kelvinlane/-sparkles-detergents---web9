@@ -44,11 +44,38 @@ admin.initializeApp({
 const firestore = admin.firestore();
 console.log('Connected to Firestore');
 
+(function logSmtpStartup() {
+    const s = getSmtpEnv();
+    if (s.host && s.user) {
+        console.log(`SMTP email notifications: enabled (host=${s.host}, user set: yes, pass set: ${s.pass ? 'yes' : 'no'})`);
+    } else {
+        const missing = [];
+        if (!s.host) missing.push('SMTP_HOST');
+        if (!s.user) missing.push('SMTP_USER');
+        console.log(
+            'SMTP email notifications: DISABLED — add these in Render → Web Service → Environment (not the static site): ' +
+                missing.join(', ')
+        );
+    }
+})();
+
 // ==================== FIRESTORE COLLECTION REFS ====================
 const usersRef = firestore.collection('users');
 const ordersRef = firestore.collection('orders');
 const productsRef = firestore.collection('products');
 const contactMessagesRef = firestore.collection('contact_messages');
+
+/** Trimmed SMTP settings (Render/UI often adds accidental spaces or empty lines.) */
+function getSmtpEnv() {
+    return {
+        host: (process.env.SMTP_HOST || '').trim(),
+        user: (process.env.SMTP_USER || '').trim(),
+        pass: (process.env.SMTP_PASS || '').trim(),
+        fromAddr: (process.env.SMTP_FROM || '').trim(),
+        port: parseInt(process.env.SMTP_PORT || '587', 10),
+        secure: process.env.SMTP_SECURE === 'true'
+    };
+}
 
 function stripPassword(userData) {
     if (!userData || typeof userData !== 'object') return userData;
@@ -57,23 +84,24 @@ function stripPassword(userData) {
 }
 
 async function sendContactEmails({ name, email, message, id }) {
-    const to = process.env.CONTACT_TO_EMAIL || 'sparklesdetergentskenya@gmail.com';
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    const to = (process.env.CONTACT_TO_EMAIL || 'sparklesdetergentskenya@gmail.com').trim();
+    const s = getSmtpEnv();
+    if (!s.host || !s.user) {
         console.log('Contact message stored; set SMTP_HOST + SMTP_USER (+ SMTP_PASS) to email notifications.');
         return { emailed: false };
     }
     try {
         const nodemailer = require('nodemailer');
         const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || '587', 10),
-            secure: process.env.SMTP_SECURE === 'true',
+            host: s.host,
+            port: s.port,
+            secure: s.secure,
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS || ''
+                user: s.user,
+                pass: s.pass
             }
         });
-        const fromAddr = process.env.SMTP_FROM || process.env.SMTP_USER;
+        const fromAddr = s.fromAddr || s.user;
         await transporter.sendMail({
             from: `"Sparkles Detergents" <${fromAddr}>`,
             to,
