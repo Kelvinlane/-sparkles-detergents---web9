@@ -68,13 +68,15 @@ app.use(
 );
 app.use(express.json());
 
-app.get('/api/health', (req, res) => {
+function sendHealth(req, res) {
     res.json({
         ok: true,
         time: new Date().toISOString(),
         corsMode: corsOrigins && corsOrigins.length ? corsOrigins : 'allow-all'
     });
-});
+}
+app.get('/api/health', sendHealth);
+app.get('/health', sendHealth);
 
 app.use(express.static(frontendPath));
 
@@ -526,4 +528,5 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Frontend served from: ${frontendPath}`);
     console.log(`Admin: http://localhost:${PORT}/admin.html`);
+    console.log(`Health check: /health and /api/health`);
 });
