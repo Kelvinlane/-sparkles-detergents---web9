@@ -34,9 +34,10 @@
         <nav class="bg-blue-900 text-white p-4">
             <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <h1 class="text-xl font-bold"><i class="fas fa-cog mr-2"></i>Sparkles Admin</h1>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 flex-wrap">
                     <button onclick="showTab('orders')" id="tab-orders" class="px-4 py-2 rounded bg-blue-800">Orders</button>
                     <button onclick="showTab('products')" id="tab-products" class="px-4 py-2 rounded hover:bg-blue-800">Products</button>
+                    <button onclick="showTab('messages')" id="tab-messages" class="px-4 py-2 rounded hover:bg-blue-800">Messages</button>
                     <button onclick="logout()" class="bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition">
                         <i class="fas fa-sign-out-alt mr-2"></i>Logout
                     </button>
@@ -116,6 +117,33 @@
             </div>
             </div>
 
+            <!-- Contact messages -->
+            <div id="section-messages" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-6 border-b flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-800">Contact messages</h2>
+                        <button onclick="loadContactMessages()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reply</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contact-messages-body" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                    <p class="px-6 py-4 text-sm text-gray-500">Reply opens your email app with the visitor’s address. Configure SMTP on the server to also receive copies by email.</p>
+                </div>
+            </div>
+
             <!-- Products Section -->
             <div id="section-products" class="hidden space-y-6">
                 <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -186,6 +214,7 @@
                     loadStats();
                     loadOrders();
                     loadProducts();
+                    loadContactMessages();
                 } else {
                     alert('Invalid credentials');
                 }
@@ -270,9 +299,68 @@
         function showTab(tab) {
             document.getElementById('tab-orders').classList.toggle('bg-blue-800', tab === 'orders');
             document.getElementById('tab-products').classList.toggle('bg-blue-800', tab === 'products');
+            document.getElementById('tab-messages').classList.toggle('bg-blue-800', tab === 'messages');
             document.getElementById('section-orders').classList.toggle('hidden', tab !== 'orders');
             document.getElementById('section-products').classList.toggle('hidden', tab !== 'products');
+            document.getElementById('section-messages').classList.toggle('hidden', tab !== 'messages');
             if (tab === 'products') loadProducts();
+            if (tab === 'messages') loadContactMessages();
+        }
+
+        function replyMailto(name, email, snippet) {
+            const em = (email || '').trim();
+            if (!em) return '#';
+            try {
+                const u = new URL('mailto:' + em);
+                u.searchParams.set('subject', 'Re: Your message to Sparkles Detergents');
+                u.searchParams.set('body', 'Hi ' + (name || 'there') + ',\n\nThank you for contacting Sparkles Detergents.\n\nRegarding your message:\n"' + (snippet || '').slice(0, 200) + '..."\n\n');
+                return u.href;
+            } catch {
+                return '#';
+            }
+        }
+
+        function escHtml(s) {
+            return String(s ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        async function loadContactMessages() {
+            try {
+                const res = await fetch(`${API_URL}/admin/contact-messages`);
+                const rows = await res.json();
+                const tbody = document.getElementById('contact-messages-body');
+                if (!res.ok || rows.error) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Could not load messages</td></tr>';
+                    return;
+                }
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No messages yet</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = rows.map(m => {
+                    const when = m.created_at ? new Date(m.created_at).toLocaleString() : '—';
+                    const msg = m.message || '';
+                    const shortRaw = msg.slice(0, 120) + (msg.length > 120 ? '…' : '');
+                    const href = replyMailto(m.name, m.email, msg);
+                    const hrefAttr = escHtml(href);
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 font-medium text-gray-900">${escHtml(m.name)}</td>
+                            <td class="px-6 py-4 text-sm text-blue-600">${escHtml(m.email)}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 max-w-md">${escHtml(shortRaw)}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">${escHtml(when)}</td>
+                            <td class="px-6 py-4"><a href="${hrefAttr}" class="text-green-600 font-semibold hover:underline"><i class="fas fa-reply mr-1"></i>Reply</a></td>
+                        </tr>`;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('contact-messages-body').innerHTML =
+                    '<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Error loading messages</td></tr>';
+            }
         }
 
         async function loadProducts() {

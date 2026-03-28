@@ -48,6 +48,54 @@ console.log('Connected to Firestore');
 const usersRef = firestore.collection('users');
 const ordersRef = firestore.collection('orders');
 const productsRef = firestore.collection('products');
+const contactMessagesRef = firestore.collection('contact_messages');
+
+function stripPassword(userData) {
+    if (!userData || typeof userData !== 'object') return userData;
+    const { password: _p, ...rest } = userData;
+    return rest;
+}
+
+async function sendContactEmails({ name, email, message, id }) {
+    const to = process.env.CONTACT_TO_EMAIL || 'sparklesdetergentskenya@gmail.com';
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+        console.log('Contact message stored; set SMTP_HOST + SMTP_USER (+ SMTP_PASS) to email notifications.');
+        return { emailed: false };
+    }
+    try {
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT || '587', 10),
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS || ''
+            }
+        });
+        const fromAddr = process.env.SMTP_FROM || process.env.SMTP_USER;
+        await transporter.sendMail({
+            from: `"Sparkles Detergents" <${fromAddr}>`,
+            to,
+            replyTo: email,
+            subject: `Website message from ${name}`,
+            text: `From: ${name} <${email}>\n\n${message}\n\n(Ref: ${id})`,
+            html: `<p><strong>${name}</strong> &lt;${email}&gt;</p><p>${message.replace(/\n/g, '<br>')}</p><p style="color:#666;font-size:12px">Ref: ${id}</p>`
+        });
+        if (process.env.CONTACT_SEND_AUTO_REPLY === 'true') {
+            await transporter.sendMail({
+                from: `"Sparkles Detergents" <${fromAddr}>`,
+                to: email,
+                subject: 'We received your message — Sparkles Detergents',
+                text: `Hi ${name},\n\nThank you for contacting Sparkles Detergents. We will get back to you soon.\n\n— Sparkles Detergents`
+            });
+        }
+        return { emailed: true };
+    } catch (err) {
+        console.error('Contact email failed:', err.message);
+        return { emailed: false, emailError: err.message };
+    }
+}
 
 // Ensure default admin user exists in Firestore
 async function ensureDefaultAdmin() {
@@ -109,10 +157,63 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         const doc = snap.docs[0];
-        res.json({ success: true, user: { id: doc.id, ...doc.data() } });
+        res.json({ success: true, user: { id: doc.id, ...stripPassword(doc.data()) } });
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({ error: 'Failed to login' });
+    }
+});
+
+// Contact form (public)
+app.post('/api/contact', async (req, res) => {
+    const { name, email, message } = req.body || {};
+    const n = (name || '').trim();
+    const em = (email || '').trim();
+    const msg = (message || '').trim();
+    if (!n || !em || !msg) {
+        return res.status(400).json({ error: 'Name, email, and message are required' });
+    }
+    try {
+        const docRef = await contactMessagesRef.add({
+            name: n,
+            email: em,
+            message: msg,
+            status: 'new',
+            created_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+        const emailResult = await sendContactEmails({ name: n, email: em, message: msg, id: docRef.id });
+        res.json({ success: true, id: docRef.id, emailed: emailResult.emailed });
+    } catch (err) {
+        console.error('Contact save error:', err);
+        res.status(500).json({ error: 'Failed to save message' });
+    }
+});
+
+app.get('/api/admin/contact-messages', async (req, res) => {
+    try {
+        const snap = await contactMessagesRef.get();
+        const rows = snap.docs
+            .map(d => {
+                const data = d.data();
+                return {
+                    id: d.id,
+                    name: data.name,
+                    email: data.email,
+                    message: data.message,
+                    status: data.status || 'new',
+                    created_at: data.created_at ? data.created_at.toDate() : null
+                };
+            })
+            .sort((a, b) => {
+                const ta = a.created_at ? a.created_at.getTime() : 0;
+                const tb = b.created_at ? b.created_at.getTime() : 0;
+                return tb - ta;
+            })
+            .slice(0, 100);
+        res.json(rows);
+    } catch (err) {
+        console.error('Admin contact messages error:', err);
+        res.status(500).json({ error: err.message || 'Failed to load messages' });
     }
 });
 
