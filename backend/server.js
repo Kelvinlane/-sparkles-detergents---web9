@@ -35,16 +35,47 @@ function buildCorsOrigins() {
             /* ignore */
         }
     }
+    const list = [...seeds].join(' ').toLowerCase();
+    if (list.includes('sparklesdetergents')) {
+        set.add('https://www.sparklesdetergents.com');
+        set.add('https://sparklesdetergents.com');
+    }
     return [...set];
 }
 
 const corsOrigins = buildCorsOrigins();
-app.use(cors({
-    origin: corsOrigins || true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
-}));
+if (corsOrigins && corsOrigins.length) {
+    console.log('CORS allowed origins:', corsOrigins.join(', '));
+}
+app.use(
+    cors({
+        origin(origin, callback) {
+            if (!corsOrigins || corsOrigins.length === 0) {
+                return callback(null, true);
+            }
+            if (!origin) {
+                return callback(null, true);
+            }
+            if (corsOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            console.warn('CORS blocked Origin:', origin);
+            return callback(null, false);
+        },
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: false
+    })
+);
 app.use(express.json());
+
+app.get('/api/health', (req, res) => {
+    res.json({
+        ok: true,
+        time: new Date().toISOString(),
+        corsMode: corsOrigins && corsOrigins.length ? corsOrigins : 'allow-all'
+    });
+});
+
 app.use(express.static(frontendPath));
 
 // ==================== FIREBASE (Firestore) ====================

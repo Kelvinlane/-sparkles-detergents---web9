@@ -206,8 +206,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                
-                const data = await res.json();
+                const text = await res.text();
+                let data;
+                try {
+                    data = text ? JSON.parse(text) : {};
+                } catch (parseErr) {
+                    alert(
+                        `API returned non-JSON (HTTP ${res.status}). The service may be waking up — wait 1 minute and try again.\n\n` +
+                            `Test: ${API_URL.replace(/\/api$/, '')}/api/health`
+                    );
+                    return;
+                }
                 if (data.success) {
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('dashboard').classList.remove('hidden');
