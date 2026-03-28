@@ -9,10 +9,18 @@
     <link href="common.css" rel="stylesheet">
     <link href="contact.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 text-gray-800 relative">
+<body class="site-body text-gray-800 relative">
 
-    <!-- Navigation -->
-    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm transition-all duration-300" id="navbar">
+    <header class="fixed top-0 left-0 right-0 z-50 shadow-md">
+        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white text-center border-b border-blue-700/50">
+            <span class="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wide">
+                <i class="fas fa-truck text-amber-300" aria-hidden="true"></i>
+                <span>Free delivery within &amp; around Nairobi</span>
+            </span>
+            <span class="hidden sm:inline text-blue-300/90 text-sm">·</span>
+            <span class="text-[11px] sm:text-xs text-blue-100/95 font-medium">Order online — we&apos;ll bring it to you</span>
+        </div>
+    <nav class="w-full bg-gradient-to-r from-slate-200/95 via-blue-100/80 to-slate-100/95 backdrop-blur-md border-b border-blue-200/60 shadow-sm transition-all duration-300" id="navbar">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
@@ -53,20 +61,22 @@
             </div>
         </div>
         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
-            <a href="index.html" class="block px-4 py-2 hover:bg-blue-50">Home</a>
-            <a href="detergents.html" class="block px-4 py-2 hover:bg-blue-50">Detergents</a>
-            <a href="about.html" class="block px-4 py-2 hover:bg-blue-50">About</a>
-            <a href="contact.html" class="block px-4 py-2 hover:bg-blue-50">Contact</a>
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-100/95 border-t border-blue-200/60">
+            <a href="index.html" class="block px-4 py-2 hover:bg-blue-100/80">Home</a>
+            <a href="detergents.html" class="block px-4 py-2 hover:bg-blue-100/80">Detergents</a>
+            <a href="about.html" class="block px-4 py-2 hover:bg-blue-100/80">About</a>
+            <a href="contact.html" class="block px-4 py-2 hover:bg-blue-100/80">Contact</a>
         </div>
     </nav>
+    </header>
 
     <!-- Main Content Area -->
-    <main id="app" class="pt-20 min-h-screen pb-20">
-        <div class="max-w-5xl mx-auto px-4 py-16 fade-in">
-            <h1 class="text-4xl font-bold text-blue-900 mb-12 text-center">Get in Touch</h1>
+    <main id="app" class="pt-32 min-h-screen pb-20">
+        <div class="page-content-band min-h-[50vh] py-12 sm:py-16 fade-in">
+        <div class="max-w-5xl mx-auto px-4">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-950 mb-10 sm:mb-12 text-center drop-shadow-sm">Get in Touch</h1>
             <div class="grid md:grid-cols-2 gap-12">
-                <div class="bg-white p-8 rounded-2xl shadow-lg">
+                <div class="page-card p-8 rounded-2xl">
                     <form id="contact-form" onsubmit="handleContactForm(event)" class="space-y-4">
                         <input type="text" name="name" placeholder="Your Name" required
                                class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
@@ -86,7 +96,7 @@
                         </p>
                     </form>
                 </div>
-                <div class="space-y-8">
+                <div class="space-y-8 page-card p-8 rounded-2xl h-fit">
                     <div class="flex items-start space-x-4">
                         <div class="bg-blue-100 p-4 rounded-full text-blue-600">
                             <i class="fas fa-phone text-xl"></i>
@@ -119,6 +129,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </main>
 

@@ -9,10 +9,18 @@
     <link href="common.css" rel="stylesheet">
     <link href="home.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 text-gray-800 relative">
+<body class="site-body text-gray-800 relative">
 
-    <!-- Navigation -->
-    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm transition-all duration-300" id="navbar">
+    <header class="fixed top-0 left-0 right-0 z-50 shadow-md">
+        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white text-center border-b border-blue-700/50">
+            <span class="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wide">
+                <i class="fas fa-truck text-amber-300" aria-hidden="true"></i>
+                <span>Free delivery within &amp; around Nairobi</span>
+            </span>
+            <span class="hidden sm:inline text-blue-300/90 text-sm">·</span>
+            <span class="text-[11px] sm:text-xs text-blue-100/95 font-medium">Order online — we&apos;ll bring it to you</span>
+        </div>
+    <nav class="w-full bg-gradient-to-r from-slate-200/95 via-blue-100/80 to-slate-100/95 backdrop-blur-md border-b border-blue-200/60 shadow-sm transition-all duration-300" id="navbar">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex items-center cursor-pointer" onclick="window.location.href='index.html'">
@@ -46,33 +54,36 @@
                 </div>
             </div>
         </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
-            <a href="index.html" class="block px-4 py-2 hover:bg-blue-50">Home</a>
-            <a href="detergents.html" class="block px-4 py-2 hover:bg-blue-50">Detergents</a>
-            <a href="about.html" class="block px-4 py-2 hover:bg-blue-50">About</a>
-            <a href="contact.html" class="block px-4 py-2 hover:bg-blue-50">Contact</a>
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-100/95 border-t border-blue-200/60">
+            <a href="index.html" class="block px-4 py-2 hover:bg-blue-100/80">Home</a>
+            <a href="detergents.html" class="block px-4 py-2 hover:bg-blue-100/80">Detergents</a>
+            <a href="about.html" class="block px-4 py-2 hover:bg-blue-100/80">About</a>
+            <a href="contact.html" class="block px-4 py-2 hover:bg-blue-100/80">Contact</a>
         </div>
     </nav>
+    </header>
 
     <!-- Main Content Area -->
-    <main id="app" class="pt-20 min-h-screen pb-20">
+    <main id="app" class="pt-32 min-h-screen pb-20">
         <!-- Hero Image Section -->
-        <div class="w-full h-auto mb-12 fade-in">
+        <div class="w-full hero-band fade-in">
             <img src="./images\Gemini_Generated_Image_3uc5ys3uc5ys3uc5.png"
                  alt="Sparkles Detergents"
-                 class="w-full h-auto object-cover shadow-lg"
+                 class="w-full h-auto object-cover shadow-md"
                  onerror="this.src='https://placehold.co/1920x600/1e3a8a/ffffff?text=Sparkles+Detergents+Banner'">
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <h2 class="text-3xl font-bold text-center mb-12 text-blue-900">Featured Products</h2>
+        <section class="featured-band">
+        <div class="max-w-7xl mx-auto px-4 py-10 sm:py-12">
+            <h2 class="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-blue-950 drop-shadow-sm">Featured Products</h2>
             <div id="featured-products-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="col-span-full text-center py-8 text-gray-500">Loading products...</div>
             </div>
             <div class="text-center mt-12">
-                <a href="detergents.html" class="inline-block border-2 border-blue-900 text-blue-900 px-8 py-3 rounded-full font-bold hover:bg-blue-900 hover:text-white transition">View All Products</a>
+                <a href="detergents.html" class="inline-block border-2 border-blue-900 text-blue-900 bg-white/70 px-8 py-3 rounded-full font-bold hover:bg-blue-900 hover:text-white transition shadow-sm">View All Products</a>
             </div>
         </div>
+        </section>
     </main>
 
     <div class="fixed bottom-8 right-8 flex flex-col space-y-2 z-40 no-print">
@@ -104,8 +115,8 @@
     <div id="product-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl transform transition-all scale-95 opacity-0" id="product-modal-content">
             <div class="grid md:grid-cols-2">
-                <div class="h-64 md:h-auto bg-gray-100 flex items-center justify-center p-6">
-                    <img id="modal-img" src="" class="max-h-full object-contain drop-shadow-lg">
+                <div class="min-h-[17rem] h-72 md:min-h-[20rem] bg-slate-100 flex items-center justify-center p-6 md:p-8">
+                    <img id="modal-img" src="" class="max-h-[22rem] w-auto max-w-full object-contain drop-shadow-lg">
                 </div>
                 <div class="p-8 flex flex-col justify-center">
                     <div class="flex justify-between items-start">
@@ -277,9 +288,9 @@
             const grid = document.getElementById('featured-products-grid');
             const featured = products.slice(0, 3);
             grid.innerHTML = featured.map(p => `
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group">
-                    <div class="relative h-44 overflow-hidden bg-gray-100 cursor-pointer" onclick="openProductModal(${p.id})">
-                        <img src="${p.image || 'https://placehold.co/400x600/3b82f6/ffffff?text=Product'}" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                <div class="bg-white/95 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group border border-blue-100/80">
+                    <div class="relative h-56 sm:h-64 overflow-hidden bg-slate-100/90 cursor-pointer flex items-center justify-center p-3" onclick="openProductModal(${p.id})">
+                        <img src="${p.image || 'https://placehold.co/400x600/3b82f6/ffffff?text=Product'}" class="w-full h-full max-h-[16rem] object-contain group-hover:scale-[1.03] transition duration-500">
                         <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">5L</div>
                     </div>
                     <div class="p-6 flex-1 flex flex-col">

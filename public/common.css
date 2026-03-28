@@ -5,6 +5,40 @@ body {
     scroll-behavior: smooth;
 }
 
+/* Site-wide layout: softer than flat white, unified blue-slate feel */
+.site-body {
+    background: linear-gradient(180deg, #e2e8f0 0%, #f1f5f9 28%, #f8fafc 100%);
+}
+
+/* Band behind full-width hero (between header and headline content) */
+.hero-band {
+    background: linear-gradient(180deg, rgba(191, 219, 254, 0.45) 0%, rgba(226, 232, 240, 0.35) 55%, rgba(241, 245, 249, 0.6) 100%);
+    padding-top: 0.35rem;
+}
+
+/* Featured products & matching content sections */
+.featured-band {
+    background: linear-gradient(180deg, rgba(186, 230, 253, 0.5) 0%, rgba(224, 231, 255, 0.35) 45%, rgba(241, 245, 249, 0.92) 100%);
+    border-top: 1px solid rgba(147, 197, 253, 0.45);
+}
+
+/* Inner pages (About, Contact): main column on blue-tint panel */
+.page-content-band {
+    background: linear-gradient(180deg, rgba(219, 234, 254, 0.55) 0%, rgba(241, 245, 249, 0.9) 100%);
+    border-top: 1px solid rgba(147, 197, 253, 0.4);
+}
+
+.page-card {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(191, 219, 254, 0.6);
+    box-shadow: 0 10px 40px -12px rgba(30, 58, 138, 0.12);
+}
+
+/* Shop page: product grid area */
+.shop-grid-band {
+    background: linear-gradient(180deg, rgba(224, 231, 255, 0.25) 0%, rgba(241, 245, 249, 0.95) 100%);
+}
+
 /* Custom S-Shape Logo CSS */
 .logo-s {
     width: 40px;
