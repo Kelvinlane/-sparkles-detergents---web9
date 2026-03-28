@@ -10,11 +10,37 @@ require('dotenv').config();
 
 // Serve frontend from ../frontend (so backend and frontend are separate folders)
 const frontendPath = path.join(__dirname, '..', 'frontend');
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || '';
+const FRONTEND_ORIGIN = (process.env.FRONTEND_ORIGIN || '').trim();
+const FRONTEND_ORIGINS_EXTRA = (process.env.FRONTEND_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+/** If FRONTEND_ORIGIN is set, also allow the www ↔ apex pair so both URLs work. */
+function buildCorsOrigins() {
+    const seeds = [...(FRONTEND_ORIGIN ? [FRONTEND_ORIGIN] : []), ...FRONTEND_ORIGINS_EXTRA];
+    if (seeds.length === 0) return null;
+    const set = new Set();
+    for (const o of seeds) {
+        set.add(o);
+        try {
+            const u = new URL(o);
+            const h = u.hostname;
+            if (h.startsWith('www.')) {
+                set.add(`${u.protocol}//${h.slice(4)}`);
+            } else {
+                set.add(`${u.protocol}//www.${h}`);
+            }
+        } catch (_) {
+            /* ignore */
+        }
+    }
+    return [...set];
+}
+
+const corsOrigins = buildCorsOrigins();
 app.use(cors({
-    // Temporary default: allow all origins until deployed domains are known.
-    // For production, set FRONTEND_ORIGIN to your Render static-site URL.
-    origin: FRONTEND_ORIGIN || true,
+    origin: corsOrigins || true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));

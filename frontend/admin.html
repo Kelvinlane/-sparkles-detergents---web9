@@ -220,7 +220,13 @@
                 }
             } catch (err) {
                 console.error('Admin login failed', err);
-                alert(`Server error. Make sure backend is running and open admin from http://localhost:3000/admin.html\n\nAPI: ${API_URL}`);
+                alert(
+                    'Could not reach the API. Check:\n' +
+                    '• Backend is deployed on Render (free tier may take ~1 min to wake).\n' +
+                    '• FRONTEND_ORIGIN on Render includes your site (www and non-www).\n' +
+                    '• Try opening admin from https://www.sparklesdetergents.com/admin.html\n\n' +
+                    `API: ${API_URL}`
+                );
             }
         });
 
