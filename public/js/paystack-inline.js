@@ -37,8 +37,37 @@
             if (!PaystackPop) {
                 throw new Error('PaystackPop is not available.');
             }
+            /* Hide our checkout modal so Paystack’s card form isn’t covered (stacking context / z-index). */
+            var orderModal = document.getElementById('order-modal');
+            if (orderModal) {
+                orderModal.classList.add('hidden');
+            }
+            var cb = callbacks || {};
             var pop = new PaystackPop();
-            return pop.resumeTransaction(accessCode, callbacks || {});
+            return pop.resumeTransaction(accessCode, {
+                onLoad: cb.onLoad,
+                onSuccess: function (transaction) {
+                    if (typeof cb.onSuccess === 'function') {
+                        cb.onSuccess(transaction);
+                    }
+                },
+                onCancel: function () {
+                    if (orderModal) {
+                        orderModal.classList.remove('hidden');
+                    }
+                    if (typeof cb.onCancel === 'function') {
+                        cb.onCancel();
+                    }
+                },
+                onError: function (err) {
+                    if (orderModal) {
+                        orderModal.classList.remove('hidden');
+                    }
+                    if (typeof cb.onError === 'function') {
+                        cb.onError(err);
+                    }
+                }
+            });
         });
     };
 })();

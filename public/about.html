@@ -435,7 +435,7 @@
             const map = {
                 mpesa_till: `<p><strong>M-Pesa Till / Buy Goods.</strong> Use Till number <strong class="font-mono text-base tracking-wide">6962655</strong>. Pay the exact order total shown at checkout. You can confirm on <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">WhatsApp</a> if you need help.</p>`,
                 cash_delivery: `<p><strong>Cash on delivery.</strong> Pay the rider or driver when you receive your order.</p>`,
-                card_paystack: `<p><strong>Add card.</strong> A secure Paystack checkout opens on this page so you can enter your card and pay in KES—similar to domain checkout on other stores.</p>`
+                card_paystack: `<p><strong>Add card.</strong> Card number, expiry, and CVV are <strong>not</strong> typed in this shop form (banks require Paystack’s own secure fields). Tap <strong>Place order</strong>, then enter your card details in the <strong>Paystack window</strong> that opens in front of the page—money is charged there after you submit.</p>`
             };
             return map[code] || '';
         }
