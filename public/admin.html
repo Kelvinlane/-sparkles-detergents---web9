@@ -292,13 +292,13 @@
 
             const pmLabels = {
                 mpesa_till: 'M-Pesa Till',
+                card_paystack: 'Card (Paystack)',
+                cash_delivery: 'Cash on delivery',
                 mpesa_paybill: 'M-Pesa Pay Bill',
                 mpesa_send: 'M-Pesa Send',
-                cash_delivery: 'Cash on delivery',
                 bank_transfer: 'Bank transfer',
                 card: 'Card / POS',
                 card_stripe: 'Card (Stripe, paid)',
-                card_paystack: 'Card (Paystack)',
                 unspecified: '—'
             };
             const pmRaw = (order.payment_method || '').trim();

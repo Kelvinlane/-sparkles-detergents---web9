@@ -202,13 +202,9 @@
                 <div>
                     <label for="order-payment-method" class="block text-sm font-medium text-gray-700 mb-1">Payment method</label>
                     <select id="order-payment-method" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                        <option value="mpesa_till">M-Pesa — Till / Buy Goods</option>
-                        <option value="mpesa_paybill">M-Pesa — Pay Bill</option>
-                        <option value="mpesa_send">M-Pesa — Send money</option>
+                        <option value="mpesa_till">M-Pesa — Till (Buy Goods)</option>
+                        <option value="card_paystack">Debit or credit card — add card (secure checkout)</option>
                         <option value="cash_delivery" selected>Cash on delivery</option>
-                        <option value="bank_transfer">Bank transfer</option>
-                        <option value="card_paystack">Debit / credit card (Paystack — pay now)</option>
-                        <option value="card">Card on delivery (POS)</option>
                     </select>
                 </div>
                 <div id="payment-instructions" class="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-xl p-3"></div>
@@ -363,12 +359,8 @@
 
         const PAYMENT_LABELS = {
             mpesa_till: 'M-Pesa (Till)',
-            mpesa_paybill: 'M-Pesa (Pay Bill)',
-            mpesa_send: 'M-Pesa (Send money)',
+            card_paystack: 'Card',
             cash_delivery: 'Cash on delivery',
-            bank_transfer: 'Bank transfer',
-            card_paystack: 'Card (Paystack)',
-            card: 'Card / POS',
             unspecified: 'Not specified'
         };
 
@@ -376,12 +368,8 @@
             const walink = 'https://wa.me/254759102078';
             const map = {
                 mpesa_till: `<p><strong>M-Pesa Till / Buy Goods.</strong> Use Till number <strong class="font-mono text-base tracking-wide">6962655</strong>. Pay the exact order total shown at checkout. You can confirm on <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">WhatsApp</a> if you need help.</p>`,
-                mpesa_paybill: `<p><strong>M-Pesa Pay Bill.</strong> You’ll receive paybill and account details (use your order ID as the account reference when possible).</p>`,
-                mpesa_send: `<p><strong>Send money (M-Pesa).</strong> Send the exact order total to <strong>0759 102 078</strong>. Prefer to <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">chat on WhatsApp</a> first so we can confirm before you pay.</p>`,
                 cash_delivery: `<p><strong>Cash on delivery.</strong> Pay the rider or driver when you receive your order.</p>`,
-                bank_transfer: `<p><strong>Bank transfer.</strong> We’ll send bank name, account number, and branch by SMS or email. Include your order ID in the reference.</p>`,
-                card_paystack: `<p><strong>Pay with card.</strong> A secure Paystack window opens on this site so you can pay in KES with your card—no need to leave for another website.</p>`,
-                card: `<p><strong>Card on delivery.</strong> Pay by card when your order arrives (POS terminal).</p>`
+                card_paystack: `<p><strong>Add card.</strong> A secure Paystack checkout opens on this page so you can enter your card and pay in KES—similar to domain checkout on other stores.</p>`
             };
             return map[code] || '';
         }
@@ -393,7 +381,7 @@
             if (!sel || !box) return;
             const v = sel.value;
             box.innerHTML = paymentMethodInstructions(v);
-            const showRef = v === 'mpesa_till' || v === 'mpesa_paybill' || v === 'mpesa_send';
+            const showRef = v === 'mpesa_till';
             if (refWrap) refWrap.classList.toggle('hidden', !showRef);
         }
 
