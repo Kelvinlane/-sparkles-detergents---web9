@@ -193,7 +193,12 @@
     </div>
 
     <script>
-        const API_URL = 'https://sparkles-detergents-web9-1.onrender.com/api';
+        const API_URL = (() => {
+            const h = window.location.hostname;
+            if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000/api';
+            if (h.endsWith('sparklesdetergents.com')) return window.location.origin + '/api';
+            return 'https://www.sparklesdetergents.com/api';
+        })();
 
         document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
