@@ -144,7 +144,7 @@
                             <tbody id="contact-messages-body" class="divide-y divide-gray-200"></tbody>
                         </table>
                     </div>
-                    <p class="px-6 py-4 text-sm text-gray-500">Reply opens your email app with the visitor’s address.</p>
+                    <p class="px-6 py-4 text-sm text-gray-500">Reply opens Gmail compose to the visitor. Make sure you are signed in with sparklesdetergentskenya@gmail.com.</p>
                 </div>
             </div>
 
@@ -379,14 +379,16 @@
         function replyMailto(name, email, snippet) {
             const em = (email || '').trim();
             if (!em) return '#';
-            try {
-                const u = new URL('mailto:' + em);
-                u.searchParams.set('subject', 'Re: Your message to Sparkles Detergents');
-                u.searchParams.set('body', 'Hi ' + (name || 'there') + ',\n\nThank you for contacting Sparkles Detergents.\n\nRegarding your message:\n"' + (snippet || '').slice(0, 200) + '..."\n\n');
-                return u.href;
-            } catch {
-                return '#';
-            }
+            const subject = 'Re: Your message to Sparkles Detergents';
+            const body = 'Hi ' + (name || 'there') + ',\n\nThank you for contacting Sparkles Detergents.\n\nRegarding your message:\n"' + (snippet || '').slice(0, 200) + '..."\n\n';
+            const to = encodeURIComponent(em);
+            const su = encodeURIComponent(subject);
+            const bo = encodeURIComponent(body);
+            const sparklesAccount = encodeURIComponent('sparklesdetergentskenya@gmail.com');
+            const gmailComposeSparkles = `https://mail.google.com/mail/?authuser=${sparklesAccount}&view=cm&fs=1&to=${to}&su=${su}&body=${bo}`;
+            const gmailCompose = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${su}&body=${bo}`;
+            const mailtoCompose = `mailto:${em}?subject=${su}&body=${bo}`;
+            return { gmailComposeSparkles, gmailCompose, mailtoCompose };
         }
 
         async function loadContactMessages() {
@@ -406,17 +408,27 @@
                     const when = m.created_at ? new Date(m.created_at).toLocaleString() : '—';
                     const msg = m.message || '';
                     const shortRaw = msg.slice(0, 120) + (msg.length > 120 ? '…' : '');
-                    const href = replyMailto(m.name, m.email, msg);
-                    const hrefAttr = escHtml(href);
+                    const reply = replyMailto(m.name, m.email, msg);
+                    const gmailHref = reply && reply.gmailComposeSparkles ? escHtml(reply.gmailComposeSparkles) : '#';
+                    const mailtoHref = reply && reply.mailtoCompose ? escHtml(reply.mailtoCompose) : '#';
                     return `
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 font-medium text-gray-900">${escHtml(m.name)}</td>
                             <td class="px-6 py-4 text-sm text-blue-600">${escHtml(m.email)}</td>
                             <td class="px-6 py-4 text-sm text-gray-600 max-w-md">${escHtml(shortRaw)}</td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">${escHtml(when)}</td>
-                            <td class="px-6 py-4"><a href="${hrefAttr}" class="text-green-600 font-semibold hover:underline"><i class="fas fa-reply mr-1"></i>Reply</a></td>
+                            <td class="px-6 py-4"><a href="${gmailHref}" data-mailto="${mailtoHref}" target="_blank" rel="noopener" class="text-green-600 font-semibold hover:underline"><i class="fas fa-reply mr-1"></i>Reply</a></td>
                         </tr>`;
                 }).join('');
+                tbody.querySelectorAll('a[data-mailto]').forEach((a) => {
+                    a.addEventListener('click', function () {
+                        setTimeout(() => {
+                            if (document.visibilityState === 'visible') {
+                                window.location.href = a.getAttribute('data-mailto') || '#';
+                            }
+                        }, 1200);
+                    });
+                });
             } catch (err) {
                 console.error(err);
                 document.getElementById('contact-messages-body').innerHTML =
