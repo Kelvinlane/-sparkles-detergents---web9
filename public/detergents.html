@@ -353,7 +353,7 @@
             grid.innerHTML = products.map(p => `
                 <div class="bg-white/95 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group border border-blue-100/80">
                     <div class="relative h-56 sm:h-64 overflow-hidden bg-slate-100/90 cursor-pointer flex items-center justify-center p-3" onclick="openProductModal(${p.id})">
-                        <img src="${p.image || 'https://placehold.co/400x600/3b82f6/ffffff?text=Product'}" class="w-full h-full max-h-[17rem] object-contain group-hover:scale-[1.03] transition duration-500">
+                        <img src="${p.image || 'https://placehold.co/400x600/3b82f6/ffffff?text=Product'}" alt="${String(p.name || 'Product').replace(/"/g, '&quot;')} — Sparkles Detergents 5 litre, Kenya" class="w-full h-full max-h-[17rem] object-contain group-hover:scale-[1.03] transition duration-500">
                         <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">5L</div>
                     </div>
                     <div class="p-6 flex-1 flex flex-col">
