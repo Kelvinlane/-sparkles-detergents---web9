@@ -169,41 +169,31 @@
                     <input type="tel" id="order-phone" placeholder="Phone (07…)" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
                     <input type="email" id="order-email" placeholder="Email" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <div class="rounded-2xl bg-gradient-to-br from-indigo-50/90 to-slate-50 border border-indigo-100 p-4 sm:p-5 space-y-4">
-                    <div class="flex items-start gap-3">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white text-sm" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
-                        <div>
-                            <h3 class="text-sm font-semibold text-indigo-950">Delivery address</h3>
-                            <p class="text-xs text-indigo-900/80 mt-0.5">Search to autofill county &amp; area, or type everything manually.</p>
-                        </div>
-                    </div>
-                    <p id="maps-config-hint" class="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 hidden">Set <code class="text-[11px]">GOOGLE_MAPS_API_KEY</code> on your server for live address search. You can still type county, region, and location below.</p>
-                    <div>
-                        <label for="order-address-search" class="block text-xs font-medium text-slate-600 mb-1">Search location or landmark</label>
-                        <input type="text" id="order-address-search" autocomplete="off" placeholder="e.g. Gachororo Juja, Nairobi CBD…" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                    </div>
+                <div class="space-y-3">
+                    <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Delivery address</h3>
                     <div class="grid sm:grid-cols-2 gap-3">
                         <div>
                             <label for="order-shipping-county" class="block text-xs font-medium text-slate-600 mb-1">County <span class="text-red-500">*</span></label>
-                            <input type="text" id="order-shipping-county" required placeholder="e.g. Kiambu" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
+                            <input type="text" id="order-shipping-county" required placeholder="e.g. Kiambu" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm">
                         </div>
                         <div>
                             <label for="order-shipping-region" class="block text-xs font-medium text-slate-600 mb-1">Region / area <span class="text-red-500">*</span></label>
-                            <input type="text" id="order-shipping-region" required placeholder="e.g. Juja" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
+                            <input type="text" id="order-shipping-region" required placeholder="e.g. Juja" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm">
                         </div>
                     </div>
                     <div>
-                        <label for="order-shipping-detail" class="block text-xs font-medium text-slate-600 mb-1">Apartment, house no., directions</label>
-                        <textarea id="order-shipping-detail" rows="2" placeholder="Building name, floor, gate colour…" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm resize-none"></textarea>
+                        <label for="order-shipping-line" class="block text-xs font-medium text-slate-600 mb-1">Street / landmark / area <span class="text-red-500">*</span></label>
+                        <input type="text" id="order-shipping-line" required autocomplete="address-line1" placeholder="Road, estate, nearest landmark" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                     </div>
-                    <input type="hidden" id="order-shipping-formatted" value="">
-                    <input type="hidden" id="order-shipping-place-id" value="">
+                    <div>
+                        <label for="order-shipping-detail" class="block text-xs font-medium text-slate-600 mb-1">Apartment, house no., directions (optional)</label>
+                        <textarea id="order-shipping-detail" rows="2" placeholder="Building name, floor, gate…" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm resize-none"></textarea>
+                    </div>
                 </div>
                 <div>
                     <label for="order-payment-method" class="block text-sm font-medium text-gray-700 mb-1">Payment method</label>
                     <select id="order-payment-method" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                         <option value="mpesa_till">M-Pesa — Till (Buy Goods)</option>
-                        <option value="card_paystack">Debit or credit card — add card (secure checkout)</option>
                         <option value="cash_delivery" selected>Cash on delivery</option>
                     </select>
                 </div>
@@ -334,8 +324,6 @@
     </footer>
 
     <script src="js/site-auth.js"></script>
-    <script src="js/paystack-order-complete.js"></script>
-    <script src="js/paystack-inline.js"></script>
     <script src="js/delivery-address.js"></script>
     <script>
         const API_URL = (() => {
@@ -359,7 +347,6 @@
 
         const PAYMENT_LABELS = {
             mpesa_till: 'M-Pesa (Till)',
-            card_paystack: 'Card',
             cash_delivery: 'Cash on delivery',
             unspecified: 'Not specified'
         };
@@ -368,8 +355,7 @@
             const walink = 'https://wa.me/254759102078';
             const map = {
                 mpesa_till: `<p><strong>M-Pesa Till / Buy Goods.</strong> Use Till number <strong class="font-mono text-base tracking-wide">6962655</strong>. Pay the exact order total shown at checkout. You can confirm on <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">WhatsApp</a> if you need help.</p>`,
-                cash_delivery: `<p><strong>Cash on delivery.</strong> Pay the rider or driver when you receive your order.</p>`,
-                card_paystack: `<p><strong>Add card.</strong> Card number, expiry, and CVV are <strong>not</strong> typed in this shop form (banks require Paystack’s own secure fields). Tap <strong>Place order</strong>, then enter your card details in the <strong>Paystack window</strong> that opens in front of the page—money is charged there after you submit.</p>`
+                cash_delivery: `<p><strong>Cash on delivery.</strong> Pay the rider or driver when you receive your order.</p>`
             };
             return map[code] || '';
         }
@@ -611,9 +597,6 @@
             const refIn = document.getElementById('order-payment-reference');
             if (refIn) refIn.value = '';
             initPaymentMethodUI();
-            if (typeof window.sparklesInitDeliveryAddress === 'function') {
-                window.sparklesInitDeliveryAddress(API_URL);
-            }
         }
         function closeOrderModal() { document.getElementById('order-modal').classList.add('hidden'); }
 
@@ -641,7 +624,6 @@
             }
         }
         
-        // Per-line Firestore orders. Paystack card: redirect → checkout-callback.html completes orders.
         async function submitOrder(e) {
             e.preventDefault();
             currentUser = typeof getCustomerUser === 'function' ? getCustomerUser() : null;
@@ -681,111 +663,6 @@
 
             const total_amount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             const orderIdBase = 'ORD-' + Date.now();
-
-            if (payment_method === 'card_paystack') {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing secure checkout...';
-                try {
-                    const callbackUrl = window.location.origin + '/checkout-callback.html';
-                    const initRes = await fetch(`${API_URL}/paystack/initialize`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email,
-                            amount_kes: total_amount,
-                            callback_url: callbackUrl,
-                            metadata: {
-                                order_group_id: orderIdBase,
-                                customer_name: name.slice(0, 80)
-                            }
-                        })
-                    });
-                    const j = await initRes.json();
-                    if (!initRes.ok || (!j.access_code && !j.authorization_url)) {
-                        alert(j.error || 'Could not start card payment. Ensure PAYSTACK_SECRET_KEY is set on the server.');
-                        btn.innerHTML = originalHtml;
-                        btn.disabled = false;
-                        return;
-                    }
-                    const pendingPayload = {
-                        version: 1,
-                        mode: 'perLine',
-                        name,
-                        phone,
-                        email,
-                        orderIdBase,
-                        total_amount,
-                        cart_subunit: j.amount_subunit,
-                        shipping: shipping,
-                        cart: cart.map((item) => ({
-                            id: item.id,
-                            name: item.name,
-                            qty: item.qty,
-                            price: item.price
-                        }))
-                    };
-                    sessionStorage.setItem('sparkles_paystack_pending', JSON.stringify(pendingPayload));
-                    if (j.access_code && typeof window.sparklesPaystackResumeInline === 'function') {
-                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening secure payment…';
-                        await window.sparklesPaystackResumeInline(j.access_code, {
-                            onSuccess: async function (transaction) {
-                                const ref = transaction && transaction.reference ? transaction.reference : '';
-                                const result = await window.sparklesCompletePaystackPending(
-                                    API_URL,
-                                    ref,
-                                    pendingPayload
-                                );
-                                sessionStorage.removeItem('sparkles_paystack_pending');
-                                btn.innerHTML = originalHtml;
-                                btn.disabled = false;
-                                if (!result.ok) {
-                                    alert(result.error || 'Could not complete order after payment.');
-                                    return;
-                                }
-                                closeOrderModal();
-                                toggleCart();
-                                document.getElementById('receipt-id').innerText = '#' + orderIdBase;
-                                document.getElementById('receipt-customer').innerText = name;
-                                document.getElementById('receipt-date').innerText = new Date().toLocaleString();
-                                document.getElementById('receipt-total').innerText = `Ksh ${total_amount}`;
-                                document.getElementById('receipt-items').innerHTML = cart
-                                    .map(
-                                        (item) =>
-                                            `<tr><td class="py-2">${item.name}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right">Ksh ${item.price * item.qty}</td></tr>`
-                                    )
-                                    .join('');
-                                document.getElementById('receipt-payment').innerText =
-                                    'Card (Paystack) · Ref: ' + (result.paystackRef || ref);
-                                setReceiptShippingDisplay(pendingPayload.shipping);
-                                cart = [];
-                                updateCartUI();
-                                document.getElementById('receipt-modal').classList.remove('hidden');
-                                await loadProducts();
-                            },
-                            onCancel: function () {
-                                btn.innerHTML = originalHtml;
-                                btn.disabled = false;
-                            },
-                            onError: function (err) {
-                                sessionStorage.removeItem('sparkles_paystack_pending');
-                                btn.innerHTML = originalHtml;
-                                btn.disabled = false;
-                                const msg =
-                                    err && err.message ? err.message : 'Could not load Paystack checkout.';
-                                alert(msg);
-                            }
-                        });
-                        return;
-                    }
-                    window.location.href = j.authorization_url;
-                    return;
-                } catch (err) {
-                    sessionStorage.removeItem('sparkles_paystack_pending');
-                    alert(err.message || String(err));
-                    btn.innerHTML = originalHtml;
-                    btn.disabled = false;
-                    return;
-                }
-            }
 
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
