@@ -107,6 +107,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             </tr>
@@ -269,7 +270,7 @@
         
         const tbody = document.getElementById('orders-table-body');
         if(orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No orders yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No orders yet</td></tr>';
             return;
         }
         
@@ -288,6 +289,22 @@
                     hour12: false
                 })
                 : '—';
+
+            const pmLabels = {
+                mpesa_till: 'M-Pesa Till',
+                mpesa_paybill: 'M-Pesa Pay Bill',
+                mpesa_send: 'M-Pesa Send',
+                cash_delivery: 'Cash on delivery',
+                bank_transfer: 'Bank transfer',
+                card: 'Card / POS',
+                card_stripe: 'Card (Stripe, paid)',
+                card_paystack: 'Card (Paystack)',
+                unspecified: '—'
+            };
+            const pmRaw = (order.payment_method || '').trim();
+            const pmLabel = pmLabels[pmRaw] || (pmRaw ? pmRaw : '—');
+            const pmRef = (order.payment_reference || '').trim();
+            const payCell = pmRef ? `${pmLabel} · ${pmRef}` : pmLabel;
             
             return `
                 <tr class="hover:bg-gray-50">
@@ -300,6 +317,7 @@
                         ${order.items || 'No items'}
                     </td>
                     <td class="px-6 py-4 font-bold text-green-600">Ksh ${order.total_amount}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600 max-w-[10rem] truncate" title="${payCell}">${payCell}</td>
                     <td class="px-6 py-4 text-sm text-gray-500">
                         ${formattedDate}
                     </td>
@@ -316,7 +334,7 @@
     } catch (err) {
         console.error('Failed to load orders');
         document.getElementById('orders-table-body').innerHTML = 
-            '<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Error loading orders</td></tr>';
+            '<tr><td colspan="7" class="px-6 py-8 text-center text-red-500">Error loading orders</td></tr>';
     }
 }
 
@@ -513,7 +531,7 @@
                 return;
             }
             
-            let csv = 'Order ID,Customer,Phone,Items,Total,Date,Status\n';
+            let csv = 'Order ID,Customer,Phone,Items,Total,Payment,Date,Status\n';
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
                 if(cells.length > 1) {

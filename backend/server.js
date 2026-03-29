@@ -8,6 +8,32 @@ const PORT = process.env.PORT || 3000;
 
 require('dotenv').config();
 
+const paystackSecretKey = (process.env.PAYSTACK_SECRET_KEY || '').trim();
+if (paystackSecretKey) {
+    console.log('Paystack: online card checkout enabled');
+} else {
+    console.log('Paystack: disabled — set PAYSTACK_SECRET_KEY for card payments (Kenya / Paystack)');
+}
+
+/** KES → Paystack amount (minor units, typically KES × 100). */
+function kesToPaystackAmountUnit(kes) {
+    return Math.round(Number(kes) * 100);
+}
+
+async function paystackRequest(path, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const headers = {
+        Authorization: `Bearer ${paystackSecretKey}`,
+        ...(options.headers || {})
+    };
+    if (method !== 'GET' && method !== 'HEAD') {
+        headers['Content-Type'] = 'application/json';
+    }
+    const res = await fetch(`https://api.paystack.co${path}`, { ...options, headers });
+    const json = await res.json().catch(() => ({}));
+    return { res, json };
+}
+
 // Serve frontend from ../frontend (so backend and frontend are separate folders)
 const frontendPath = path.join(__dirname, '..', 'frontend');
 const FRONTEND_ORIGIN = (process.env.FRONTEND_ORIGIN || '').trim();
@@ -77,6 +103,83 @@ function sendHealth(req, res) {
 }
 app.get('/api/health', sendHealth);
 app.get('/health', sendHealth);
+
+app.post('/api/paystack/initialize', async (req, res) => {
+    if (!paystackSecretKey) {
+        return res.status(503).json({ error: 'Paystack is not configured on this server.' });
+    }
+    const email = String(req.body.email || '')
+        .trim()
+        .slice(0, 120);
+    const amountKes = parseInt(req.body.amount_kes, 10);
+    const callback_url = String(req.body.callback_url || '').trim().slice(0, 600);
+    if (!email || !callback_url.startsWith('http')) {
+        return res.status(400).json({ error: 'Valid email and callback_url are required' });
+    }
+    if (!Number.isFinite(amountKes) || amountKes < 1) {
+        return res.status(400).json({ error: 'Invalid amount' });
+    }
+    const amount = kesToPaystackAmountUnit(amountKes);
+    const rawMeta = req.body.metadata && typeof req.body.metadata === 'object' ? req.body.metadata : {};
+    const metadata = {};
+    for (const [k, v] of Object.entries(rawMeta)) {
+        if (Object.keys(metadata).length >= 5) break;
+        metadata[String(k).slice(0, 40)] = String(v).slice(0, 100);
+    }
+    try {
+        const { res: psRes, json } = await paystackRequest('/transaction/initialize', {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                amount,
+                currency: 'KES',
+                callback_url,
+                metadata
+            })
+        });
+        if (!psRes.ok || !json.status) {
+            return res.status(400).json({ error: json.message || 'Paystack could not start checkout' });
+        }
+        res.json({
+            authorization_url: json.data.authorization_url,
+            reference: json.data.reference,
+            amount_subunit: amount
+        });
+    } catch (err) {
+        console.error('Paystack initialize:', err);
+        res.status(500).json({ error: err.message || 'Paystack error' });
+    }
+});
+
+app.get('/api/paystack/verify', async (req, res) => {
+    if (!paystackSecretKey) {
+        return res.status(503).json({ ok: false, error: 'Paystack is not configured' });
+    }
+    const reference = String(req.query.reference || '').trim();
+    if (!reference) {
+        return res.status(400).json({ ok: false, error: 'reference is required' });
+    }
+    try {
+        const { res: psRes, json } = await paystackRequest(
+            `/transaction/verify/${encodeURIComponent(reference)}`,
+            { method: 'GET' }
+        );
+        if (!psRes.ok || !json.status) {
+            return res.status(400).json({ ok: false, error: json.message || 'Verification failed' });
+        }
+        const d = json.data || {};
+        const ok = (d.status || '').toLowerCase() === 'success';
+        res.json({
+            ok,
+            amount: d.amount,
+            currency: d.currency,
+            reference: d.reference
+        });
+    } catch (err) {
+        console.error('Paystack verify:', err);
+        res.status(500).json({ ok: false, error: err.message || 'Verify error' });
+    }
+});
 
 app.use(express.static(frontendPath));
 
@@ -306,12 +409,75 @@ app.get('/api/admin/contact-messages', async (req, res) => {
 
 // ORDER Routes (Customer)
 app.post('/api/orders', async (req, res) => {
-    const { customer_name, customer_phone, customer_email, items, total_amount } = req.body;
-    const orderId = 'ORD-' + Date.now();
+    const {
+        customer_name,
+        customer_phone,
+        customer_email,
+        items,
+        total_amount,
+        payment_method,
+        payment_reference,
+        order_group_id,
+        is_multi_item_order,
+        paystack_reference,
+        paystack_cart_total_subunit
+    } = req.body;
+
+    let pm =
+        typeof payment_method === 'string' && payment_method.trim()
+            ? payment_method.trim().slice(0, 64)
+            : 'unspecified';
+    let pref =
+        typeof payment_reference === 'string'
+            ? payment_reference.trim().slice(0, 200)
+            : '';
+    const groupId =
+        typeof order_group_id === 'string' ? order_group_id.trim().slice(0, 128) : '';
+    const multiFlag = !!is_multi_item_order;
+
+    const paystackRef =
+        typeof paystack_reference === 'string' ? paystack_reference.trim().slice(0, 128) : '';
+    const paystackExpectedSub = parseInt(paystack_cart_total_subunit, 10);
+
+    const orderId = 'ORD-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 8999);
     const safeItems = Array.isArray(items) ? items : [];
 
     if (!customer_name || !customer_phone || !safeItems.length || !Number.isFinite(Number(total_amount))) {
         return res.status(400).json({ error: 'Invalid order payload' });
+    }
+
+    if (paystackRef) {
+        if (!paystackSecretKey) {
+            return res.status(503).json({ error: 'Paystack is not configured on this server.' });
+        }
+        if (!Number.isFinite(paystackExpectedSub) || paystackExpectedSub < 1) {
+            return res.status(400).json({ error: 'Invalid Paystack verification' });
+        }
+        try {
+            const { res: psRes, json } = await paystackRequest(
+                `/transaction/verify/${encodeURIComponent(paystackRef)}`,
+                { method: 'GET' }
+            );
+            if (!psRes.ok || !json.status || !json.data) {
+                return res.status(400).json({ error: json.message || 'Could not verify Paystack payment' });
+            }
+            const d = json.data;
+            if ((d.status || '').toLowerCase() !== 'success') {
+                return res.status(400).json({ error: 'Paystack payment was not successful' });
+            }
+            if ((d.currency || '').toUpperCase() !== 'KES') {
+                return res.status(400).json({ error: 'Unexpected Paystack currency' });
+            }
+            const paid = parseInt(d.amount, 10);
+            if (!Number.isFinite(paid) || paid !== paystackExpectedSub) {
+                return res.status(400).json({ error: 'Paystack amount mismatch' });
+            }
+        } catch (err) {
+            console.error('Paystack order verify:', err);
+            return res.status(400).json({ error: err.message || 'Paystack verification failed' });
+        }
+        pm = 'card_paystack';
+        pref = paystackRef.slice(0, 200);
     }
 
     try {
@@ -359,6 +525,10 @@ app.post('/api/orders', async (req, res) => {
             customer_email: customer_email || '',
             total_amount: parseInt(total_amount, 10) || 0,
             status: 'completed',
+            payment_method: pm,
+            payment_reference: pref,
+            order_group_id: groupId,
+            is_multi_item_order: multiFlag,
             items: safeItems.map(i => ({
                 id: i.id,
                 name: i.name,
@@ -392,6 +562,10 @@ app.get('/api/admin/orders', async (req, res) => {
                 customer_email: data.customer_email || '',
                 total_amount: data.total_amount || 0,
                 status: data.status || 'pending',
+                payment_method: data.payment_method || '',
+                payment_reference: data.payment_reference || '',
+                order_group_id: data.order_group_id || '',
+                is_multi_item_order: !!data.is_multi_item_order,
                 created_at: data.created_at ? data.created_at.toDate() : new Date(0),
                 items: itemsDisplay
             };

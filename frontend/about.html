@@ -191,7 +191,24 @@
             <form id="order-form" onsubmit="submitOrder(event)" class="space-y-4">
                 <input type="text" id="order-name" placeholder="Full Name" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
                 <input type="tel" id="order-phone" placeholder="Phone Number (07...)" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
-                <input type="email" id="order-email" placeholder="Email (optional)" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="email" id="order-email" placeholder="Email (account email)" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                <div>
+                    <label for="order-payment-method" class="block text-sm font-medium text-gray-700 mb-1">Payment method</label>
+                    <select id="order-payment-method" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        <option value="mpesa_till">M-Pesa — Till / Buy Goods</option>
+                        <option value="mpesa_paybill">M-Pesa — Pay Bill</option>
+                        <option value="mpesa_send">M-Pesa — Send money</option>
+                        <option value="cash_delivery" selected>Cash on delivery</option>
+                        <option value="bank_transfer">Bank transfer</option>
+                        <option value="card_paystack">Debit / credit card (Paystack — pay now)</option>
+                        <option value="card">Card on delivery (POS)</option>
+                    </select>
+                </div>
+                <div id="payment-instructions" class="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-lg p-3"></div>
+                <div id="payment-ref-wrap" class="hidden">
+                    <label for="order-payment-reference" class="block text-sm font-medium text-gray-700 mb-1">M-Pesa ref / confirmation (optional)</label>
+                    <input type="text" id="order-payment-reference" maxlength="40" placeholder="e.g. QK7ABC1234" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
                 <button type="submit" id="order-submit-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition flex justify-center items-center gap-2">
                     <i class="fas fa-check"></i> Place Order
                 </button>
@@ -252,6 +269,7 @@
                     <span>Customer:</span>
                     <span id="receipt-customer">Guest</span>
                 </div>
+                <div class="flex justify-between mt-2"><span>Payment:</span><span id="receipt-payment" class="text-right max-w-[55%]">—</span></div>
             </div>
 
             <table class="w-full text-left mb-4">
@@ -365,6 +383,53 @@
 
         let cart = [];
         let currentUser = typeof getCustomerUser === 'function' ? getCustomerUser() : null;
+
+        const PAYMENT_LABELS = {
+            mpesa_till: 'M-Pesa (Till)',
+            mpesa_paybill: 'M-Pesa (Pay Bill)',
+            mpesa_send: 'M-Pesa (Send money)',
+            cash_delivery: 'Cash on delivery',
+            bank_transfer: 'Bank transfer',
+            card_paystack: 'Card (Paystack)',
+            card: 'Card / POS',
+            unspecified: 'Not specified'
+        };
+
+        function paymentMethodInstructions(code) {
+            const walink = 'https://wa.me/254759102078';
+            const map = {
+                mpesa_till: `<p><strong>M-Pesa Till / Buy Goods.</strong> Use Till number <strong class="font-mono text-base tracking-wide">6962655</strong>. Pay the exact order total shown at checkout. You can confirm on <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">WhatsApp</a> if you need help.</p>`,
+                mpesa_paybill: `<p><strong>M-Pesa Pay Bill.</strong> You’ll receive paybill and account details (use your order ID as the account reference when possible).</p>`,
+                mpesa_send: `<p><strong>Send money (M-Pesa).</strong> Send the exact order total to <strong>0759 102 078</strong>. Prefer to <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">chat on WhatsApp</a> first so we can confirm before you pay.</p>`,
+                cash_delivery: `<p><strong>Cash on delivery.</strong> Pay the rider or driver when you receive your order.</p>`,
+                bank_transfer: `<p><strong>Bank transfer.</strong> We’ll send bank name, account number, and branch by SMS or email. Include your order ID in the reference.</p>`,
+                card_paystack: `<p><strong>Pay with card.</strong> You’ll be sent to Paystack’s secure page to pay in KES, then back here to complete your order.</p>`,
+                card: `<p><strong>Card on delivery.</strong> Pay by card when your order arrives (POS terminal).</p>`
+            };
+            return map[code] || '';
+        }
+
+        function syncPaymentInstructions() {
+            const sel = document.getElementById('order-payment-method');
+            const box = document.getElementById('payment-instructions');
+            const refWrap = document.getElementById('payment-ref-wrap');
+            if (!sel || !box) return;
+            const v = sel.value;
+            box.innerHTML = paymentMethodInstructions(v);
+            const showRef = v === 'mpesa_till' || v === 'mpesa_paybill' || v === 'mpesa_send';
+            if (refWrap) refWrap.classList.toggle('hidden', !showRef);
+        }
+
+        function initPaymentMethodUI() {
+            const sel = document.getElementById('order-payment-method');
+            if (!sel || sel.dataset.pmInit === '1') {
+                syncPaymentInstructions();
+                return;
+            }
+            sel.dataset.pmInit = '1';
+            sel.addEventListener('change', syncPaymentInstructions);
+            syncPaymentInstructions();
+        }
 
         // --- Cart Logic ---
         function addToCart(id) {
@@ -529,6 +594,10 @@
                     setCustomerUser(data.user);
                     toggleAuthModal();
                     alert('Logged in successfully!');
+                    if (window.checkoutAfterAuth) {
+                        window.checkoutAfterAuth = false;
+                        initiateCheckout();
+                    }
                 } else {
                     const res = await fetch(`${API_URL}/register`, {
                         method: 'POST',
@@ -557,6 +626,10 @@
                     setCustomerUser(loginData.user);
                     toggleAuthModal();
                     alert('Account created and you are logged in!');
+                    if (window.checkoutAfterAuth) {
+                        window.checkoutAfterAuth = false;
+                        initiateCheckout();
+                    }
                 }
             } catch (err) {
                 console.error(err);
@@ -567,33 +640,117 @@
         // --- Checkout & Order ---
         function initiateCheckout() {
             if(cart.length === 0) return alert("Cart is empty! Add products first.");
-            document.getElementById('order-modal').classList.remove('hidden');
-            if(currentUser) {
-                document.getElementById('order-name').value = currentUser.name || '';
-                document.getElementById('order-email').value = currentUser.email || '';
+            currentUser = typeof getCustomerUser === 'function' ? getCustomerUser() : null;
+            if (!currentUser) {
+                window.checkoutAfterAuth = true;
+                alert('Please sign in or create an account to complete your order.');
+                toggleAuthModal();
+                switchAuthTab('login');
+                return;
             }
+            document.getElementById('order-modal').classList.remove('hidden');
+            document.getElementById('order-name').value = currentUser.name || '';
+            document.getElementById('order-email').value = currentUser.email || '';
+            const refIn = document.getElementById('order-payment-reference');
+            if (refIn) refIn.value = '';
+            initPaymentMethodUI();
         }
         function closeOrderModal() { document.getElementById('order-modal').classList.add('hidden'); }
         async function submitOrder(e) {
             e.preventDefault();
+            currentUser = typeof getCustomerUser === 'function' ? getCustomerUser() : null;
+            if (!currentUser) {
+                window.checkoutAfterAuth = true;
+                alert('Please sign in or create an account to complete your order.');
+                toggleAuthModal();
+                switchAuthTab('login');
+                return;
+            }
             const name = document.getElementById('order-name').value.trim();
             const phone = document.getElementById('order-phone').value.trim();
-            const email = document.getElementById('order-email').value.trim() || '';
-            if(!name || !phone) return alert("Name and phone are required");
+            let email = document.getElementById('order-email').value.trim();
+            if (!email && currentUser.email) email = String(currentUser.email).trim();
+            const payment_method = document.getElementById('order-payment-method').value;
+            const prefEl = document.getElementById('order-payment-reference');
+            const payment_reference = prefEl ? prefEl.value.trim() : '';
+            if (!name || !phone || !email) return alert('Name, phone, and email are required for checkout.');
             const btn = document.getElementById('order-submit-btn');
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
             btn.disabled = true;
             const items = cart.map(item => ({ id: item.id, name: item.name, qty: item.qty, price: item.price }));
             const total_amount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const orderIdBase = 'ORD-' + Date.now();
+
+            if (payment_method === 'card_paystack') {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Paystack...';
+                try {
+                    const callbackUrl = window.location.origin + '/checkout-callback.html';
+                    const initRes = await fetch(`${API_URL}/paystack/initialize`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email,
+                            amount_kes: total_amount,
+                            callback_url: callbackUrl,
+                            metadata: { order_group_id: orderIdBase, customer_name: name.slice(0, 80) }
+                        })
+                    });
+                    const j = await initRes.json();
+                    if (!initRes.ok || !j.authorization_url) {
+                        alert(j.error || 'Could not start card payment. Ensure PAYSTACK_SECRET_KEY is set on the server.');
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                        return;
+                    }
+                    sessionStorage.setItem(
+                        'sparkles_paystack_pending',
+                        JSON.stringify({
+                            version: 1,
+                            mode: 'singleOrder',
+                            name,
+                            phone,
+                            email,
+                            orderIdBase,
+                            total_amount,
+                            cart_subunit: j.amount_subunit,
+                            cart: cart.map(item => ({
+                                id: item.id,
+                                name: item.name,
+                                qty: item.qty,
+                                price: item.price
+                            }))
+                        })
+                    );
+                    window.location.href = j.authorization_url;
+                    return;
+                } catch (err) {
+                    alert(err.message || String(err));
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    return;
+                }
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+            const payload = {
+                customer_name: name,
+                customer_phone: phone,
+                customer_email: email,
+                items,
+                total_amount,
+                payment_method,
+                payment_reference,
+                order_group_id: '',
+                is_multi_item_order: cart.length > 1
+            };
             try {
                 const res = await fetch(`${API_URL}/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_email: email, items, total_amount })
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                if(data.success) {
+                if (data.success) {
                     closeOrderModal();
                     toggleCart();
                     document.getElementById('receipt-id').innerText = '#' + data.order_id;
@@ -603,6 +760,10 @@
                     document.getElementById('receipt-items').innerHTML = cart.map(item =>
                         `<tr><td class="py-2">${item.name}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right">Ksh ${item.price * item.qty}</td></tr>`
                     ).join('');
+                    const pmLabel = PAYMENT_LABELS[payment_method] || payment_method;
+                    document.getElementById('receipt-payment').innerText = payment_reference
+                        ? `${pmLabel} · Ref: ${payment_reference}`
+                        : pmLabel;
                     cart = [];
                     updateCartUI();
                     document.getElementById('receipt-modal').classList.remove('hidden');
@@ -638,6 +799,7 @@
 
             document.getElementById('receipt-modal').classList.remove('hidden');
         }
+        initPaymentMethodUI();
         loadProducts().then(() => updateCartUI());
     </script>
 </body>

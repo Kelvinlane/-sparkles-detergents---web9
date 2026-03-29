@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment | Sparkles Detergents</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap'); body { font-family: 'Poppins', sans-serif; }</style>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div id="panel" class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center border border-blue-100">
+        <div class="flex justify-center mb-4"><i class="fas fa-spinner fa-spin text-3xl text-blue-600" id="spin"></i></div>
+        <p id="status" class="text-gray-700">Verifying payment with Paystack…</p>
+        <div id="extra" class="mt-4 text-sm text-left text-gray-600 hidden"></div>
+        <div id="actions" class="mt-6 hidden flex flex-col gap-2">
+            <a href="/index.html" class="block w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 text-center">Back to shop</a>
+        </div>
+    </div>
+    <script>
+        const API_URL = (() => {
+            const h = window.location.hostname;
+            if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000/api';
+            if (h.endsWith('sparklesdetergents.com')) return window.location.origin + '/api';
+            return 'https://www.sparklesdetergents.com/api';
+        })();
+        const PENDING_KEY = 'sparkles_paystack_pending';
+
+        function esc(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function showActions() {
+            document.getElementById('spin').classList.add('hidden');
+            document.getElementById('actions').classList.remove('hidden');
+        }
+
+        async function postOrderSingle(pending, paystackRef, subunit) {
+            const { name, phone, email, total_amount, cart, orderIdBase } = pending;
+            const items = cart.map(function (item) {
+                return { id: item.id, name: item.name, qty: item.qty, price: item.price };
+            });
+            const body = {
+                customer_name: name,
+                customer_phone: phone,
+                customer_email: email,
+                items: items,
+                total_amount: total_amount,
+                order_group_id: orderIdBase || '',
+                is_multi_item_order: cart.length > 1,
+                payment_method: 'card_paystack',
+                payment_reference: paystackRef,
+                paystack_reference: paystackRef,
+                paystack_cart_total_subunit: subunit
+            };
+            const res = await fetch(API_URL + '/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            return res.json();
+        }
+
+        async function postOrderLine(pending, item, paystackRef, subunit) {
+            const { name, phone, email, orderIdBase, cart } = pending;
+            const body = {
+                customer_name: name,
+                customer_phone: phone,
+                customer_email: email,
+                items: [{ id: item.id, name: item.name, qty: item.qty, price: item.price }],
+                total_amount: item.price * item.qty,
+                order_group_id: orderIdBase,
+                is_multi_item_order: cart.length > 1,
+                payment_method: 'card_paystack',
+                payment_reference: paystackRef,
+                paystack_reference: paystackRef,
+                paystack_cart_total_subunit: subunit
+            };
+            const res = await fetch(API_URL + '/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            return res.json();
+        }
+
+        async function main() {
+            const statusEl = document.getElementById('status');
+            const extraEl = document.getElementById('extra');
+            const params = new URLSearchParams(window.location.search);
+            const ref = (params.get('reference') || params.get('trxref') || '').trim();
+
+            if (!ref) {
+                statusEl.textContent = 'Missing payment reference.';
+                statusEl.className = 'text-red-600 font-medium';
+                showActions();
+                return;
+            }
+
+            let pending = null;
+            try {
+                pending = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null');
+            } catch (e) {}
+
+            if (!pending || pending.version !== 1 || !Array.isArray(pending.cart)) {
+                statusEl.innerHTML = 'We could not restore your cart after payment. If you were charged, contact us with Paystack reference:<br><code class="text-xs break-all">' + esc(ref) + '</code>';
+                statusEl.className = 'text-amber-800';
+                sessionStorage.removeItem(PENDING_KEY);
+                showActions();
+                return;
+            }
+
+            const vRes = await fetch(API_URL + '/paystack/verify?reference=' + encodeURIComponent(ref));
+            const v = await vRes.json();
+            if (!v.ok) {
+                statusEl.textContent = v.error || 'Payment verification failed.';
+                statusEl.className = 'text-red-600 font-medium';
+                sessionStorage.removeItem(PENDING_KEY);
+                showActions();
+                return;
+            }
+
+            const paidSub = parseInt(v.amount, 10);
+            const expectedSub = parseInt(pending.cart_subunit, 10);
+            if (!Number.isFinite(paidSub) || paidSub !== expectedSub) {
+                statusEl.textContent = 'Amount mismatch after payment. Contact support with reference: ' + ref;
+                statusEl.className = 'text-red-600';
+                sessionStorage.removeItem(PENDING_KEY);
+                showActions();
+                return;
+            }
+
+            sessionStorage.removeItem(PENDING_KEY);
+
+            const mode = pending.mode === 'perLine' ? 'perLine' : 'singleOrder';
+            if (mode === 'singleOrder') {
+                const data = await postOrderSingle(pending, ref, paidSub);
+                if (!data.success) {
+                    statusEl.innerHTML = 'Payment received, but saving the order failed:<br>' + esc(data.error || 'Unknown error') + '<br><small>Reference: ' + esc(ref) + '</small>';
+                    statusEl.className = 'text-red-600';
+                    showActions();
+                    return;
+                }
+                statusEl.innerHTML = '<span class="text-green-700 font-bold text-lg">Order placed — Thank you!</span><p class="mt-2 text-sm text-gray-600">Paystack ref: <code>' + esc(ref) + '</code></p><p class="text-sm text-gray-600">Order ID: <code>#' + esc(data.order_id) + '</code></p><p class="text-sm text-gray-600 mt-1">Total: Ksh ' + esc(pending.total_amount) + '</p>';
+                extraEl.classList.add('hidden');
+            } else {
+                const ids = [];
+                for (let i = 0; i < pending.cart.length; i++) {
+                    const data = await postOrderLine(pending, pending.cart[i], ref, paidSub);
+                    if (!data.success) {
+                        statusEl.innerHTML = 'Payment received, but part of your order failed:<br>' + esc(data.error || '') + '<br><small>Reference: ' + esc(ref) + '</small>';
+                        statusEl.className = 'text-red-600';
+                        if (ids.length) extraEl.textContent = 'Completed line items: ' + ids.join(', ');
+                        extraEl.classList.remove('hidden');
+                        showActions();
+                        return;
+                    }
+                    ids.push(data.order_id);
+                }
+                statusEl.innerHTML = '<span class="text-green-700 font-bold text-lg">Order placed — Thank you!</span><p class="mt-2 text-sm text-gray-600">Paystack ref: <code>' + esc(ref) + '</code></p><p class="text-sm text-gray-600">Group: #' + esc(pending.orderIdBase) + '</p><p class="text-sm text-gray-600 mt-1">Total: Ksh ' + esc(pending.total_amount) + '</p>';
+                extraEl.classList.add('hidden');
+            }
+            showActions();
+        }
+        main().catch(function (err) {
+            document.getElementById('status').textContent = err.message || String(err);
+            document.getElementById('status').className = 'text-red-600';
+            showActions();
+        });
+    </script>
+</body>
+</html>
