@@ -18,6 +18,7 @@
             <a href="/index.html" class="block w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 text-center">Back to shop</a>
         </div>
     </div>
+    <script src="js/paystack-order-complete.js"></script>
     <script>
         const API_URL = (() => {
             const h = window.location.hostname;
@@ -34,55 +35,6 @@
         function showActions() {
             document.getElementById('spin').classList.add('hidden');
             document.getElementById('actions').classList.remove('hidden');
-        }
-
-        async function postOrderSingle(pending, paystackRef, subunit) {
-            const { name, phone, email, total_amount, cart, orderIdBase } = pending;
-            const items = cart.map(function (item) {
-                return { id: item.id, name: item.name, qty: item.qty, price: item.price };
-            });
-            const body = {
-                customer_name: name,
-                customer_phone: phone,
-                customer_email: email,
-                items: items,
-                total_amount: total_amount,
-                order_group_id: orderIdBase || '',
-                is_multi_item_order: cart.length > 1,
-                payment_method: 'card_paystack',
-                payment_reference: paystackRef,
-                paystack_reference: paystackRef,
-                paystack_cart_total_subunit: subunit
-            };
-            const res = await fetch(API_URL + '/orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            return res.json();
-        }
-
-        async function postOrderLine(pending, item, paystackRef, subunit) {
-            const { name, phone, email, orderIdBase, cart } = pending;
-            const body = {
-                customer_name: name,
-                customer_phone: phone,
-                customer_email: email,
-                items: [{ id: item.id, name: item.name, qty: item.qty, price: item.price }],
-                total_amount: item.price * item.qty,
-                order_group_id: orderIdBase,
-                is_multi_item_order: cart.length > 1,
-                payment_method: 'card_paystack',
-                payment_reference: paystackRef,
-                paystack_reference: paystackRef,
-                paystack_cart_total_subunit: subunit
-            };
-            const res = await fetch(API_URL + '/orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            return res.json();
         }
 
         async function main() {
@@ -111,54 +63,49 @@
                 return;
             }
 
-            const vRes = await fetch(API_URL + '/paystack/verify?reference=' + encodeURIComponent(ref));
-            const v = await vRes.json().catch(() => ({}));
-            if (!vRes.ok || !v.ok) {
-                statusEl.textContent = v.error || 'Payment verification failed.';
+            if (typeof window.sparklesCompletePaystackPending !== 'function') {
+                statusEl.textContent = 'Checkout script failed to load.';
                 statusEl.className = 'text-red-600 font-medium';
-                sessionStorage.removeItem(PENDING_KEY);
                 showActions();
                 return;
             }
 
-            const paidSub = parseInt(v.amount, 10);
-            const expectedSub = parseInt(pending.cart_subunit, 10);
-            if (!Number.isFinite(paidSub) || paidSub !== expectedSub) {
-                statusEl.textContent = 'Amount mismatch after payment. Contact support with reference: ' + ref;
-                statusEl.className = 'text-red-600';
-                sessionStorage.removeItem(PENDING_KEY);
-                showActions();
-                return;
-            }
-
+            const result = await window.sparklesCompletePaystackPending(API_URL, ref, pending);
             sessionStorage.removeItem(PENDING_KEY);
 
-            const mode = pending.mode === 'perLine' ? 'perLine' : 'singleOrder';
-            if (mode === 'singleOrder') {
-                const data = await postOrderSingle(pending, ref, paidSub);
-                if (!data.success) {
-                    statusEl.innerHTML = 'Payment received, but saving the order failed:<br>' + esc(data.error || 'Unknown error') + '<br><small>Reference: ' + esc(ref) + '</small>';
-                    statusEl.className = 'text-red-600';
-                    showActions();
-                    return;
+            if (!result.ok) {
+                statusEl.textContent = result.error || 'Could not complete your order.';
+                statusEl.className = 'text-red-600 font-medium';
+                if (result.partialIds && result.partialIds.length) {
+                    extraEl.textContent = 'Completed line items: ' + result.partialIds.join(', ');
+                    extraEl.classList.remove('hidden');
                 }
-                statusEl.innerHTML = '<span class="text-green-700 font-bold text-lg">Order placed — Thank you!</span><p class="mt-2 text-sm text-gray-600">Paystack ref: <code>' + esc(ref) + '</code></p><p class="text-sm text-gray-600">Order ID: <code>#' + esc(data.order_id) + '</code></p><p class="text-sm text-gray-600 mt-1">Total: Ksh ' + esc(pending.total_amount) + '</p>';
+                showActions();
+                return;
+            }
+
+            const mode = result.mode === 'perLine' ? 'perLine' : 'singleOrder';
+            const p = result.pending || pending;
+            if (mode === 'singleOrder') {
+                const oid = result.orderIds && result.orderIds[0] ? result.orderIds[0] : '';
+                statusEl.innerHTML =
+                    '<span class="text-green-700 font-bold text-lg">Order placed — Thank you!</span><p class="mt-2 text-sm text-gray-600">Paystack ref: <code>' +
+                    esc(result.paystackRef || ref) +
+                    '</code></p><p class="text-sm text-gray-600">Order ID: <code>#' +
+                    esc(oid) +
+                    '</code></p><p class="text-sm text-gray-600 mt-1">Total: Ksh ' +
+                    esc(p.total_amount) +
+                    '</p>';
                 extraEl.classList.add('hidden');
             } else {
-                const ids = [];
-                for (let i = 0; i < pending.cart.length; i++) {
-                    const data = await postOrderLine(pending, pending.cart[i], ref, paidSub);
-                    if (!data.success) {
-                        statusEl.innerHTML = 'Payment received, but part of your order failed:<br>' + esc(data.error || '') + '<br><small>Reference: ' + esc(ref) + '</small>';
-                        statusEl.className = 'text-red-600';
-                        if (ids.length) extraEl.textContent = 'Completed line items: ' + ids.join(', ');
-                        extraEl.classList.remove('hidden');
-                        showActions();
-                        return;
-                    }
-                    ids.push(data.order_id);
-                }
-                statusEl.innerHTML = '<span class="text-green-700 font-bold text-lg">Order placed — Thank you!</span><p class="mt-2 text-sm text-gray-600">Paystack ref: <code>' + esc(ref) + '</code></p><p class="text-sm text-gray-600">Group: #' + esc(pending.orderIdBase) + '</p><p class="text-sm text-gray-600 mt-1">Total: Ksh ' + esc(pending.total_amount) + '</p>';
+                statusEl.innerHTML =
+                    '<span class="text-green-700 font-bold text-lg">Order placed — Thank you!</span><p class="mt-2 text-sm text-gray-600">Paystack ref: <code>' +
+                    esc(result.paystackRef || ref) +
+                    '</code></p><p class="text-sm text-gray-600">Group: #' +
+                    esc(p.orderIdBase) +
+                    '</p><p class="text-sm text-gray-600 mt-1">Total: Ksh ' +
+                    esc(p.total_amount) +
+                    '</p>';
                 extraEl.classList.add('hidden');
             }
             showActions();

@@ -104,6 +104,12 @@ function sendHealth(req, res) {
 app.get('/api/health', sendHealth);
 app.get('/health', sendHealth);
 
+/** Browser key: enable Places Autocomplete on checkout (restrict key by HTTP referrer in Google Cloud). */
+app.get('/api/maps-config', (req, res) => {
+    const googleMapsApiKey = (process.env.GOOGLE_MAPS_API_KEY || '').trim();
+    res.json({ googleMapsApiKey });
+});
+
 app.post('/api/paystack/initialize', async (req, res) => {
     if (!paystackSecretKey) {
         return res.status(503).json({ error: 'Paystack is not configured on this server.' });
@@ -142,6 +148,7 @@ app.post('/api/paystack/initialize', async (req, res) => {
         }
         res.json({
             authorization_url: json.data.authorization_url,
+            access_code: json.data.access_code,
             reference: json.data.reference,
             amount_subunit: amount
         });
@@ -420,7 +427,12 @@ app.post('/api/orders', async (req, res) => {
         order_group_id,
         is_multi_item_order,
         paystack_reference,
-        paystack_cart_total_subunit
+        paystack_cart_total_subunit,
+        shipping_county,
+        shipping_region,
+        shipping_location_label,
+        shipping_detail,
+        shipping_place_id
     } = req.body;
 
     let pm =
@@ -444,6 +456,27 @@ app.post('/api/orders', async (req, res) => {
 
     if (!customer_name || !customer_phone || !safeItems.length || !Number.isFinite(Number(total_amount))) {
         return res.status(400).json({ error: 'Invalid order payload' });
+    }
+
+    const scounty = String(shipping_county || '')
+        .trim()
+        .slice(0, 120);
+    const sregion = String(shipping_region || '')
+        .trim()
+        .slice(0, 120);
+    const slocation = String(shipping_location_label || '')
+        .trim()
+        .slice(0, 500);
+    const sdetail = String(shipping_detail || '')
+        .trim()
+        .slice(0, 300);
+    const splace = String(shipping_place_id || '')
+        .trim()
+        .slice(0, 256);
+    if (scounty.length < 2 || sregion.length < 2 || slocation.length < 3) {
+        return res.status(400).json({
+            error: 'County, region/area, and delivery location (search or description) are required.'
+        });
     }
 
     if (paystackRef) {
@@ -535,6 +568,11 @@ app.post('/api/orders', async (req, res) => {
                 qty: i.qty,
                 price: i.price
             })),
+            shipping_county: scounty,
+            shipping_region: sregion,
+            shipping_location_label: slocation,
+            shipping_detail: sdetail,
+            shipping_place_id: splace,
             created_at: admin.firestore.FieldValue.serverTimestamp()
         };
         await ordersRef.doc(orderId).set(orderDoc);
@@ -554,12 +592,14 @@ app.get('/api/admin/orders', async (req, res) => {
             const data = d.data();
             const itemsArr = Array.isArray(data.items) ? data.items : [];
             const itemsDisplay = itemsArr.map(it => `${it.name} (x${it.qty})`).join(', ');
+            const shipBits = [data.shipping_county, data.shipping_region].filter(Boolean);
             return {
                 id: d.id,
                 order_id: data.order_id || d.id,
                 customer_name: data.customer_name,
                 customer_phone: data.customer_phone,
                 customer_email: data.customer_email || '',
+                shipping_summary: shipBits.length ? shipBits.join(' · ') : '',
                 total_amount: data.total_amount || 0,
                 status: data.status || 'pending',
                 payment_method: data.payment_method || '',

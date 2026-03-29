@@ -156,16 +156,52 @@
 
     <!-- Order Checkout Modal -->
     <div id="order-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl relative">
-            <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
-            <h2 class="text-2xl font-bold text-blue-900 mb-6 text-center">Complete Your Order</h2>
-            <form id="order-form" onsubmit="submitOrder(event)" class="space-y-4">
-                <input type="text" id="order-name" placeholder="Full Name" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
-                <input type="tel" id="order-phone" placeholder="Phone Number (07...)" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
-                <input type="email" id="order-email" placeholder="Email (account email)" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative border border-slate-100">
+            <button type="button" onclick="closeOrderModal()" class="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 bg-white/90 rounded-full p-1"><i class="fas fa-times text-xl"></i></button>
+            <form id="order-form" onsubmit="submitOrder(event)" class="p-6 sm:p-8 space-y-6">
+                <div class="text-center pr-8">
+                    <h2 class="text-2xl font-bold text-blue-900">Complete your order</h2>
+                    <p class="text-sm text-gray-500 mt-1">Contact &amp; delivery details</p>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Contact</h3>
+                    <input type="text" id="order-name" placeholder="Full name" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="tel" id="order-phone" placeholder="Phone (07…)" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="email" id="order-email" placeholder="Email" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="rounded-2xl bg-gradient-to-br from-indigo-50/90 to-slate-50 border border-indigo-100 p-4 sm:p-5 space-y-4">
+                    <div class="flex items-start gap-3">
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white text-sm" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                        <div>
+                            <h3 class="text-sm font-semibold text-indigo-950">Delivery address</h3>
+                            <p class="text-xs text-indigo-900/80 mt-0.5">Search to autofill county &amp; area, or type everything manually.</p>
+                        </div>
+                    </div>
+                    <p id="maps-config-hint" class="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 hidden">Set <code class="text-[11px]">GOOGLE_MAPS_API_KEY</code> on your server for live address search. You can still type county, region, and location below.</p>
+                    <div>
+                        <label for="order-address-search" class="block text-xs font-medium text-slate-600 mb-1">Search location or landmark</label>
+                        <input type="text" id="order-address-search" autocomplete="off" placeholder="e.g. Gachororo Juja, Nairobi CBD…" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="order-shipping-county" class="block text-xs font-medium text-slate-600 mb-1">County <span class="text-red-500">*</span></label>
+                            <input type="text" id="order-shipping-county" required placeholder="e.g. Kiambu" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
+                        </div>
+                        <div>
+                            <label for="order-shipping-region" class="block text-xs font-medium text-slate-600 mb-1">Region / area <span class="text-red-500">*</span></label>
+                            <input type="text" id="order-shipping-region" required placeholder="e.g. Juja" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="order-shipping-detail" class="block text-xs font-medium text-slate-600 mb-1">Apartment, house no., directions</label>
+                        <textarea id="order-shipping-detail" rows="2" placeholder="Building name, floor, gate colour…" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm resize-none"></textarea>
+                    </div>
+                    <input type="hidden" id="order-shipping-formatted" value="">
+                    <input type="hidden" id="order-shipping-place-id" value="">
+                </div>
                 <div>
                     <label for="order-payment-method" class="block text-sm font-medium text-gray-700 mb-1">Payment method</label>
-                    <select id="order-payment-method" required class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                    <select id="order-payment-method" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                         <option value="mpesa_till">M-Pesa — Till / Buy Goods</option>
                         <option value="mpesa_paybill">M-Pesa — Pay Bill</option>
                         <option value="mpesa_send">M-Pesa — Send money</option>
@@ -175,12 +211,12 @@
                         <option value="card">Card on delivery (POS)</option>
                     </select>
                 </div>
-                <div id="payment-instructions" class="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-lg p-3"></div>
+                <div id="payment-instructions" class="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-xl p-3"></div>
                 <div id="payment-ref-wrap" class="hidden">
                     <label for="order-payment-reference" class="block text-sm font-medium text-gray-700 mb-1">M-Pesa ref / confirmation (optional)</label>
-                    <input type="text" id="order-payment-reference" maxlength="40" placeholder="e.g. QK7ABC1234" class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" id="order-payment-reference" maxlength="40" placeholder="e.g. QK7ABC1234" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
-                <button type="submit" id="order-submit-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition flex justify-center items-center gap-2">
+                <button type="submit" id="order-submit-btn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition flex justify-center items-center gap-2">
                     <i class="fas fa-check"></i> Place Order
                 </button>
             </form>
@@ -224,6 +260,10 @@
                 <div class="flex justify-between mb-2"><span>Date:</span><span id="receipt-date"></span></div>
                 <div class="flex justify-between mb-2"><span>Order ID:</span><span id="receipt-id">#ORD-2023-X</span></div>
                 <div class="flex justify-between"><span>Customer:</span><span id="receipt-customer">Guest</span></div>
+                <div id="receipt-shipping-wrap" class="hidden mt-3 pt-3 border-t border-dashed border-gray-200 text-left">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Deliver to</span>
+                    <p id="receipt-shipping" class="text-sm text-gray-700 mt-1 whitespace-pre-wrap"></p>
+                </div>
                 <div class="flex justify-between mt-2"><span>Payment:</span><span id="receipt-payment" class="text-right max-w-[55%]">—</span></div>
             </div>
             <table class="w-full text-left mb-4">
@@ -298,6 +338,9 @@
     </footer>
 
     <script src="js/site-auth.js"></script>
+    <script src="js/paystack-order-complete.js"></script>
+    <script src="js/paystack-inline.js"></script>
+    <script src="js/delivery-address.js"></script>
     <script>
         const API_URL = (() => {
             const h = window.location.hostname;
@@ -337,7 +380,7 @@
                 mpesa_send: `<p><strong>Send money (M-Pesa).</strong> Send the exact order total to <strong>0759 102 078</strong>. Prefer to <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">chat on WhatsApp</a> first so we can confirm before you pay.</p>`,
                 cash_delivery: `<p><strong>Cash on delivery.</strong> Pay the rider or driver when you receive your order.</p>`,
                 bank_transfer: `<p><strong>Bank transfer.</strong> We’ll send bank name, account number, and branch by SMS or email. Include your order ID in the reference.</p>`,
-                card_paystack: `<p><strong>Pay with card.</strong> You’ll be sent to Paystack’s secure page to pay in KES. After payment you’ll return here to finish your order.</p>`,
+                card_paystack: `<p><strong>Pay with card.</strong> A secure Paystack window opens on this site so you can pay in KES with your card—no need to leave for another website.</p>`,
                 card: `<p><strong>Card on delivery.</strong> Pay by card when your order arrives (POS terminal).</p>`
             };
             return map[code] || '';
@@ -580,8 +623,35 @@
             const refIn = document.getElementById('order-payment-reference');
             if (refIn) refIn.value = '';
             initPaymentMethodUI();
+            if (typeof window.sparklesInitDeliveryAddress === 'function') {
+                window.sparklesInitDeliveryAddress(API_URL);
+            }
         }
         function closeOrderModal() { document.getElementById('order-modal').classList.add('hidden'); }
+
+        function formatReceiptShipping(s) {
+            if (!s) return '';
+            var lines = [];
+            if (s.shipping_county || s.shipping_region) {
+                lines.push([s.shipping_county, s.shipping_region].filter(Boolean).join(', '));
+            }
+            if (s.shipping_location_label) lines.push(s.shipping_location_label);
+            if (s.shipping_detail) lines.push(s.shipping_detail);
+            return lines.join('\n');
+        }
+        function setReceiptShippingDisplay(shipping) {
+            var wrap = document.getElementById('receipt-shipping-wrap');
+            var el = document.getElementById('receipt-shipping');
+            if (!wrap || !el) return;
+            var t = formatReceiptShipping(shipping);
+            if (t) {
+                el.textContent = t;
+                wrap.classList.remove('hidden');
+            } else {
+                el.textContent = '';
+                wrap.classList.add('hidden');
+            }
+        }
         
         // Per-line Firestore orders. Paystack card: redirect → checkout-callback.html completes orders.
         async function submitOrder(e) {
@@ -605,6 +675,17 @@
             if (!name || !phone || !email) {
                 return alert('Name, phone, and email are required for checkout.');
             }
+            const shipping =
+                typeof window.sparklesReadShippingPayload === 'function'
+                    ? window.sparklesReadShippingPayload()
+                    : {};
+            const shipErr =
+                typeof window.sparklesValidateShipping === 'function'
+                    ? window.sparklesValidateShipping(shipping)
+                    : null;
+            if (shipErr) {
+                return alert(shipErr);
+            }
 
             const btn = document.getElementById('order-submit-btn');
             const originalHtml = btn.innerHTML;
@@ -614,7 +695,7 @@
             const orderIdBase = 'ORD-' + Date.now();
 
             if (payment_method === 'card_paystack') {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Paystack...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing secure checkout...';
                 try {
                     const callbackUrl = window.location.origin + '/checkout-callback.html';
                     const initRes = await fetch(`${API_URL}/paystack/initialize`, {
@@ -631,34 +712,86 @@
                         })
                     });
                     const j = await initRes.json();
-                    if (!initRes.ok || !j.authorization_url) {
+                    if (!initRes.ok || (!j.access_code && !j.authorization_url)) {
                         alert(j.error || 'Could not start card payment. Ensure PAYSTACK_SECRET_KEY is set on the server.');
                         btn.innerHTML = originalHtml;
                         btn.disabled = false;
                         return;
                     }
-                    sessionStorage.setItem(
-                        'sparkles_paystack_pending',
-                        JSON.stringify({
-                            version: 1,
-                            mode: 'perLine',
-                            name,
-                            phone,
-                            email,
-                            orderIdBase,
-                            total_amount,
-                            cart_subunit: j.amount_subunit,
-                            cart: cart.map((item) => ({
-                                id: item.id,
-                                name: item.name,
-                                qty: item.qty,
-                                price: item.price
-                            }))
-                        })
-                    );
+                    const pendingPayload = {
+                        version: 1,
+                        mode: 'perLine',
+                        name,
+                        phone,
+                        email,
+                        orderIdBase,
+                        total_amount,
+                        cart_subunit: j.amount_subunit,
+                        shipping: shipping,
+                        cart: cart.map((item) => ({
+                            id: item.id,
+                            name: item.name,
+                            qty: item.qty,
+                            price: item.price
+                        }))
+                    };
+                    sessionStorage.setItem('sparkles_paystack_pending', JSON.stringify(pendingPayload));
+                    if (j.access_code && typeof window.sparklesPaystackResumeInline === 'function') {
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening secure payment…';
+                        await window.sparklesPaystackResumeInline(j.access_code, {
+                            onSuccess: async function (transaction) {
+                                const ref = transaction && transaction.reference ? transaction.reference : '';
+                                const result = await window.sparklesCompletePaystackPending(
+                                    API_URL,
+                                    ref,
+                                    pendingPayload
+                                );
+                                sessionStorage.removeItem('sparkles_paystack_pending');
+                                btn.innerHTML = originalHtml;
+                                btn.disabled = false;
+                                if (!result.ok) {
+                                    alert(result.error || 'Could not complete order after payment.');
+                                    return;
+                                }
+                                closeOrderModal();
+                                toggleCart();
+                                document.getElementById('receipt-id').innerText = '#' + orderIdBase;
+                                document.getElementById('receipt-customer').innerText = name;
+                                document.getElementById('receipt-date').innerText = new Date().toLocaleString();
+                                document.getElementById('receipt-total').innerText = `Ksh ${total_amount}`;
+                                document.getElementById('receipt-items').innerHTML = cart
+                                    .map(
+                                        (item) =>
+                                            `<tr><td class="py-2">${item.name}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right">Ksh ${item.price * item.qty}</td></tr>`
+                                    )
+                                    .join('');
+                                document.getElementById('receipt-payment').innerText =
+                                    'Card (Paystack) · Ref: ' + (result.paystackRef || ref);
+                                setReceiptShippingDisplay(pendingPayload.shipping);
+                                cart = [];
+                                updateCartUI();
+                                document.getElementById('receipt-modal').classList.remove('hidden');
+                                await loadProducts();
+                            },
+                            onCancel: function () {
+                                btn.innerHTML = originalHtml;
+                                btn.disabled = false;
+                            },
+                            onError: function (err) {
+                                sessionStorage.removeItem('sparkles_paystack_pending');
+                                btn.innerHTML = originalHtml;
+                                btn.disabled = false;
+                                const msg =
+                                    err && err.message ? err.message : 'Could not load Paystack checkout.';
+                                alert(msg);
+                            }
+                        });
+                        return;
+                    }
                     window.location.href = j.authorization_url;
                     return;
                 } catch (err) {
+                    sessionStorage.removeItem('sparkles_paystack_pending');
                     alert(err.message || String(err));
                     btn.innerHTML = originalHtml;
                     btn.disabled = false;
@@ -685,6 +818,9 @@
                     payment_method,
                     payment_reference
                 };
+                if (typeof window.sparklesMergeShippingIntoObject === 'function') {
+                    window.sparklesMergeShippingIntoObject(orderData, shipping);
+                }
                 try {
                     const res = await fetch(`${API_URL}/orders`, {
                         method: 'POST',
@@ -720,6 +856,7 @@
                     document.getElementById('receipt-payment').innerText = payment_reference
                         ? `${pmLabel} · Ref: ${payment_reference}`
                         : pmLabel;
+                    setReceiptShippingDisplay(shipping);
                     cart = [];
                     updateCartUI();
                     document.getElementById('receipt-modal').classList.remove('hidden');
