@@ -112,8 +112,8 @@
             }
 
             const vRes = await fetch(API_URL + '/paystack/verify?reference=' + encodeURIComponent(ref));
-            const v = await vRes.json();
-            if (!v.ok) {
+            const v = await vRes.json().catch(() => ({}));
+            if (!vRes.ok || !v.ok) {
                 statusEl.textContent = v.error || 'Payment verification failed.';
                 statusEl.className = 'text-red-600 font-medium';
                 sessionStorage.removeItem(PENDING_KEY);
