@@ -21,34 +21,34 @@
         if (document.getElementById('sparkles-easter-offer-style')) return;
         var style = document.createElement('style');
         style.id = 'sparkles-easter-offer-style';
+        // Only animate transforms to avoid layout shift.
         style.textContent = '\
 @keyframes sparklesEasterPop {\
   0% { transform: scale(1); }\
-  30% { transform: scale(1.02); }\
-  60% { transform: scale(0.995); }\
+  25% { transform: scale(1.03); }\
+  55% { transform: scale(0.997); }\
   100% { transform: scale(1); }\
 }\
-@keyframes sparklesEasterGlow {\
-  0% { box-shadow: 0 0 0 rgba(245, 158, 11, 0.0); }\
-  40% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25); }\
-  80% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.0); }\
-  100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0.0); }\
-}\
 .easter-offer-popping {\
-  animation: sparklesEasterPop 1.7s ease-in-out infinite, sparklesEasterGlow 2.6s ease-in-out infinite;\
+  transform-origin: center;\
+  animation: sparklesEasterPop 1.6s ease-in-out infinite;\
+  will-change: transform;\
 }';
         document.head.appendChild(style);
     }
 
     function hideBanner(banner) {
         if (!banner) return;
-        banner.classList.add('hidden');
-        banner.classList.remove('easter-offer-popping');
+        banner.classList.add('opacity-0', 'pointer-events-none');
+        banner.classList.remove('opacity-100', 'pointer-events-auto');
+        var card = byId('easter-offer-card');
+        if (card) card.classList.remove('easter-offer-popping');
     }
 
     function tick() {
         var banner = byId('easter-offer-banner');
         var countdown = byId('easter-offer-countdown');
+        var card = byId('easter-offer-card');
         if (!banner || !countdown) return;
 
         var end = getEasterMondayEndLocal();
@@ -60,8 +60,9 @@
             return;
         }
 
-        banner.classList.remove('hidden');
-        banner.classList.add('easter-offer-popping');
+        banner.classList.remove('opacity-0', 'pointer-events-none');
+        banner.classList.add('opacity-100', 'pointer-events-auto');
+        if (card) card.classList.add('easter-offer-popping');
 
         var diffMs = end.getTime() - now.getTime();
         var totalSeconds = Math.floor(diffMs / 1000);
