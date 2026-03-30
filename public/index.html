@@ -84,6 +84,32 @@
 
     <!-- Main Content Area -->
     <main id="app" class="pt-32 min-h-screen pb-20">
+        <div id="easter-offer-banner" class="hidden mb-6 px-4 sm:px-6">
+            <div class="relative max-w-7xl mx-auto rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 shadow-lg p-4 sm:p-6">
+                <button id="easter-offer-close" type="button" class="absolute top-3 right-3 text-amber-700/70 hover:text-amber-900" aria-label="Close Easter offer">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-400/20 text-amber-800">
+                            <i class="fas fa-sparkles"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wide text-amber-800">Easter Offer</div>
+                            <div class="text-lg sm:text-xl font-extrabold text-amber-950 leading-tight">
+                                New customers: <span class="underline decoration-amber-600 underline-offset-4">10% OFF</span> first order
+                            </div>
+                            <div class="text-sm text-amber-900/80 mt-1">
+                                Ends after Easter Monday in <span id="easter-offer-countdown" class="font-mono"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="detergents.html" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-blue-900 text-white font-bold hover:bg-blue-800 transition shadow">
+                        Shop &amp; Save
+                    </a>
+                </div>
+            </div>
+        </div>
         <!-- Hero Image Section -->
         <div class="w-full hero-band fade-in">
             <img src="./images\Gemini_Generated_Image_3uc5ys3uc5ys3uc5.png"
@@ -327,6 +353,7 @@
     <script src="js/site-auth.js"></script>
     <script src="js/delivery-address.js"></script>
     <script src="js/receipt-download.js"></script>
+    <script src="js/easter-offer-banner.js"></script>
     <script>
         const API_URL = (() => {
             const h = window.location.hostname;
