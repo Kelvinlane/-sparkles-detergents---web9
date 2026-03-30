@@ -720,7 +720,12 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        return { success: true, item: item.name, orderId: data.order_id };
+                        return {
+                            success: true,
+                            item: item.name,
+                            orderId: data.order_id,
+                            pricing: data.pricing || {}
+                        };
                     }
                     return { success: false, item: item.name, error: data.error || 'Unknown error' };
                 } catch (err) {
@@ -739,7 +744,16 @@
                     document.getElementById('receipt-id').innerText = '#' + orderIdBase;
                     document.getElementById('receipt-customer').innerText = name;
                     document.getElementById('receipt-date').innerText = new Date().toLocaleString();
-                    document.getElementById('receipt-total').innerText = `Ksh ${total_amount}`;
+                    const originalTotalSum = results.reduce((sum, r) => sum + (r.pricing?.original_total_amount || 0), 0);
+                    const discountedTotalSum = results.reduce((sum, r) => sum + (r.pricing?.discounted_total_amount || 0), 0);
+                    const offerApplied = results.some((r) => r.pricing?.offer_applied);
+                    if (offerApplied) {
+                        document.getElementById('receipt-total').innerHTML =
+                            `<span class="line-through text-gray-400 mr-2">Ksh ${originalTotalSum}</span>` +
+                            `<span class="text-green-700 font-bold">Ksh ${discountedTotalSum}</span>`;
+                    } else {
+                        document.getElementById('receipt-total').innerText = `Ksh ${discountedTotalSum}`;
+                    }
                     document.getElementById('receipt-items').innerHTML = cart.map(item =>
                         `<tr><td class="py-2">${item.name}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right">Ksh ${item.price * item.qty}</td></tr>`
                     ).join('');

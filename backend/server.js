@@ -435,6 +435,8 @@ app.post('/api/orders', async (req, res) => {
         shipping_place_id
     } = req.body;
 
+    const originalTotalAmount = parseInt(total_amount, 10) || 0;
+
     let pm =
         typeof payment_method === 'string' && payment_method.trim()
             ? payment_method.trim().slice(0, 64)
@@ -513,6 +515,50 @@ app.post('/api/orders', async (req, res) => {
         pref = paystackRef.slice(0, 200);
     }
 
+    // ==================== Easter New Customer Offer ====================
+    // Apply 10% off only for eligible "first order" customers during the Easter period.
+    // Eligibility: no previous orders for this customer with a different order_group_id.
+    // We only apply the discount for non-card payments so Paystack amounts remain consistent.
+    let offer_applied = false;
+    let discount_percent = 0;
+    let discounted_total_amount = originalTotalAmount;
+
+    const easterEndUtc = Date.UTC(2026, 3, 6, 20, 59, 59); // 2026-04-06 23:59:59 in Africa/Nairobi (UTC+3)
+    const nowUtc = Date.now();
+    const custEmail = String(customer_email || '').trim();
+    const offerActive = nowUtc <= easterEndUtc;
+
+    if (
+        offerActive &&
+        custEmail &&
+        (pm === 'mpesa_till' || pm === 'cash_delivery') &&
+        originalTotalAmount > 0 &&
+        typeof groupId === 'string' &&
+        groupId.length
+    ) {
+        try {
+            const groupIdForQuery = groupId || '__none__';
+            const prevSnap = await ordersRef
+                .where('customer_email', '==', custEmail)
+                .limit(20)
+                .get();
+
+            const hasDifferentGroup = prevSnap.docs.some((d) => {
+                const od = d.data() || {};
+                return String(od.order_group_id || '') !== groupIdForQuery;
+            });
+
+            offer_applied = !hasDifferentGroup;
+            if (offer_applied) {
+                discount_percent = 10;
+                discounted_total_amount = Math.round(originalTotalAmount * 0.9);
+            }
+        } catch (e) {
+            // If the Firestore query needs an index (or fails), do not block checkout.
+            console.error('Offer eligibility check failed:', e.message || e);
+        }
+    }
+
     try {
         await firestore.runTransaction(async (t) => {
             const productRefs = safeItems.map(item => {
@@ -556,7 +602,11 @@ app.post('/api/orders', async (req, res) => {
             customer_name,
             customer_phone,
             customer_email: customer_email || '',
-            total_amount: parseInt(total_amount, 10) || 0,
+            total_amount: discounted_total_amount,
+            original_total_amount: originalTotalAmount,
+            discounted_total_amount: discounted_total_amount,
+            discount_percent: discount_percent,
+            offer_applied: offer_applied,
             status: 'completed',
             payment_method: pm,
             payment_reference: pref,
@@ -577,7 +627,16 @@ app.post('/api/orders', async (req, res) => {
         };
         await ordersRef.doc(orderId).set(orderDoc);
 
-        res.json({ success: true, order_id: orderId });
+        res.json({
+            success: true,
+            order_id: orderId,
+            pricing: {
+                offer_applied: offer_applied,
+                discount_percent: discount_percent,
+                original_total_amount: originalTotalAmount,
+                discounted_total_amount: discounted_total_amount
+            }
+        });
     } catch (err) {
         console.error('Order error:', err);
         res.status(400).json({ error: err.message || 'Failed to place order' });
