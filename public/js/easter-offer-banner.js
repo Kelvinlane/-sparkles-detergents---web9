@@ -1,6 +1,7 @@
 /**
  * Easter offer banner (client pages)
- * Shows a conspicuous "10% off new customers" banner until after Easter Monday.
+ * Conspicuous "10% off new customers" banner until after Easter Monday.
+ * Clients cannot dismiss (no close button); it only auto-hides when the offer ends.
  */
 (function () {
     function byId(id) {
@@ -16,20 +17,39 @@
         return new Date(2026, 3, 6, 23, 59, 59);
     }
 
+    function injectStyles() {
+        if (document.getElementById('sparkles-easter-offer-style')) return;
+        var style = document.createElement('style');
+        style.id = 'sparkles-easter-offer-style';
+        style.textContent = '\
+@keyframes sparklesEasterPop {\
+  0% { transform: scale(1); }\
+  30% { transform: scale(1.02); }\
+  60% { transform: scale(0.995); }\
+  100% { transform: scale(1); }\
+}\
+@keyframes sparklesEasterGlow {\
+  0% { box-shadow: 0 0 0 rgba(245, 158, 11, 0.0); }\
+  40% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.25); }\
+  80% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.0); }\
+  100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0.0); }\
+}\
+.easter-offer-popping {\
+  animation: sparklesEasterPop 1.7s ease-in-out infinite, sparklesEasterGlow 2.6s ease-in-out infinite;\
+}';
+        document.head.appendChild(style);
+    }
+
     function hideBanner(banner) {
         if (!banner) return;
         banner.classList.add('hidden');
+        banner.classList.remove('easter-offer-popping');
     }
 
     function tick() {
         var banner = byId('easter-offer-banner');
         var countdown = byId('easter-offer-countdown');
         if (!banner || !countdown) return;
-
-        if (localStorage.getItem('sparkles_easter_offer_closed') === '1') {
-            hideBanner(banner);
-            return;
-        }
 
         var end = getEasterMondayEndLocal();
         var now = new Date();
@@ -41,6 +61,7 @@
         }
 
         banner.classList.remove('hidden');
+        banner.classList.add('easter-offer-popping');
 
         var diffMs = end.getTime() - now.getTime();
         var totalSeconds = Math.floor(diffMs / 1000);
@@ -54,14 +75,7 @@
     }
 
     function init() {
-        var banner = byId('easter-offer-banner');
-        var closeBtn = byId('easter-offer-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function () {
-                localStorage.setItem('sparkles_easter_offer_closed', '1');
-                hideBanner(banner);
-            });
-        }
+        injectStyles();
 
         tick();
         setInterval(tick, 1000);
