@@ -712,63 +712,70 @@ app.get('/api/admin/order/:id', async (req, res) => {
     }
 });
 
-/** Canonical catalog (paths are root-relative so they work from any page on the site). */
-const PRODUCT_CATALOG_DEFAULTS = [
-    { id: 1, name: 'Liquid Laundry', price: 600, image: '/images/sparkles-liquid-laundry-5l.png', imageAlt: 'Sparkles 5 litre blue liquid laundry detergent in a jerrycan — smart dirt removal, washing machine graphic, Nairobi Kenya', desc: 'Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.', category: 'Laundry', stock: 100 },
-    { id: 2, name: 'Hair Shampoo', price: 699, image: '/images/sparkles-hair-shampoo-5l.png', imageAlt: 'Sparkles Hair Shampoo 5 litre bulk bottle — colour care, shine and detangling, Nairobi Kenya', desc: 'Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.', category: 'Personal Care', stock: 80 },
-    { id: 3, name: 'Shower Gel', price: 749, image: '/images/sparkles-shower-gel-pink-5l.png', imageAlt: 'Sparkles Detergents pink shower gel 5 litre — moisturizing body wash, Nairobi Kenya', desc: 'Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.', category: 'Personal Care', stock: 75 },
-    { id: 4, name: 'Multi-purpose Detergent', price: 549, image: '/images/Dofoto_20260106_131334771.jpg', imageAlt: 'Sparkles multi-purpose surface detergent 5 litre — floors, tiles and kitchen tops, Kenya', desc: 'All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.', category: 'Household', stock: 90 },
-    { id: 5, name: 'Dish Washing Liquid', price: 449, image: '/images/sparkles-dishwash-lemon-5l.png', imageAlt: "Mommy D's Sparkles lemon dishwashing liquid 5 litre jug — grease-cutting kitchen soap, Kenya", desc: 'Cuts through grease instantly. Lemon fresh scent. 5 Litres.', category: 'Kitchen', stock: 120 },
-    { id: 6, name: 'Bleach', price: 499, image: '/images/Dofoto_20260105_145304900.jpg', imageAlt: 'Sparkles laundry bleach 5 litre — whitening and disinfecting, Kenya', desc: 'Strong whitening and disinfecting action. 5 Litres.', category: 'Laundry', stock: 85 },
-    { id: 7, name: 'Fabric Softener', price: 900, image: '/images/sparkles-fabric-softener-5l.png', imageAlt: 'Sparkles fabric softener 5 litre pink bottle — long-lasting floral fragrance, Kenya', desc: 'Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.', category: 'Laundry', stock: 70 }
+/**
+ * Original seven products — keep these photos (paths root-relative).
+ * Six newer pack-shot images are separate products (ids 8–13), not replacements.
+ */
+const PRODUCT_CATALOG_LEGACY_1_7 = [
+    { id: 1, name: 'Liquid Laundry', price: 600, image: '/images/Dofoto_20260105_151624084.jpg', imageAlt: 'Liquid laundry detergent 5 litre bottle Sparkles Detergents Kenya', desc: 'Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.', category: 'Laundry', stock: 100 },
+    { id: 2, name: 'Hair Shampoo', price: 699, image: '/images/ChatGPT Image Feb 20, 2026, 11_37_30 AM.png', imageAlt: 'Hair shampoo 5 litre Sparkles bulk bottle Kenya', desc: 'Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.', category: 'Personal Care', stock: 80 },
+    { id: 3, name: 'Shower Gel', price: 749, image: '/images/Dofoto_20260106_130957947.jpg', imageAlt: 'Shower gel body wash 5 litre Sparkles Detergents Kenya', desc: 'Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.', category: 'Personal Care', stock: 75 },
+    { id: 4, name: 'Multi-purpose Detergent', price: 549, image: '/images/Dofoto_20260106_131334771.jpg', imageAlt: 'Multi-purpose surface cleaner 5 litre Sparkles Kenya', desc: 'All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.', category: 'Household', stock: 90 },
+    { id: 5, name: 'Dish Washing Liquid', price: 449, image: '/images/Dofoto_20260105_150608139.jpg', imageAlt: 'Dish washing liquid 5 litre Sparkles Kenya', desc: 'Cuts through grease instantly. Lemon fresh scent. 5 Litres.', category: 'Kitchen', stock: 120 },
+    { id: 6, name: 'Bleach', price: 499, image: '/images/Dofoto_20260105_145304900.jpg', imageAlt: 'Laundry bleach 5 litre whitening Sparkles Kenya', desc: 'Strong whitening and disinfecting action. 5 Litres.', category: 'Laundry', stock: 85 },
+    { id: 7, name: 'Fabric Softener', price: 900, image: '/images/Dofoto_20260105_150739737.jpg', imageAlt: 'Fabric softener 5 litre Sparkles floral Kenya', desc: 'Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.', category: 'Laundry', stock: 70 }
 ];
 
-function shouldRefreshProductImageUrl(url) {
-    const s = String(url || '').trim();
-    if (!s) return true;
-    if (/placehold\.co/i.test(s)) return true;
-    if (/ChatGPT\s*Image/i.test(s)) return true;
-    if (s.includes('Dofoto_')) return true;
-    return false;
-}
+/** Six additional listings using the new pack photography (ids 8–13). */
+const PRODUCT_CATALOG_NEW_8_13 = [
+    { id: 8, name: 'Liquid Laundry (blue jug)', price: 600, image: '/images/sparkles-liquid-laundry-5l.png', imageAlt: 'Sparkles 5 litre blue liquid laundry detergent in a jerrycan — smart dirt removal, washing machine graphic, Nairobi Kenya', desc: 'Same great formula — alternate label and jug style. Powerful stain removal, 5 Litres.', category: 'Laundry', stock: 100 },
+    { id: 9, name: 'Hair Shampoo (salon jug)', price: 699, image: '/images/sparkles-hair-shampoo-5l.png', imageAlt: 'Sparkles Hair Shampoo 5 litre bulk bottle — colour care, shine and detangling, Nairobi Kenya', desc: 'Same line — shown in blue salon-style jug. Nourishing formula, 5 Litres.', category: 'Personal Care', stock: 80 },
+    { id: 10, name: 'Shower Gel — pink jug', price: 749, image: '/images/sparkles-shower-gel-pink-5l.png', imageAlt: 'Sparkles Detergents pink shower gel 5 litre — moisturizing body wash, Nairobi Kenya', desc: 'Moisturizing body wash — pink pack. All natural feel, 5 Litres.', category: 'Personal Care', stock: 75 },
+    { id: 11, name: 'Shower Gel — red jug', price: 749, image: '/images/sparkles-shower-gel-red-5l.png', imageAlt: 'Sparkles Detergents red shower gel 5 litre — moisturizing body wash, Nairobi Kenya', desc: 'Moisturizing body wash — red pack variant. 5 Litres.', category: 'Personal Care', stock: 75 },
+    { id: 12, name: 'Dish Washing Liquid — lemon jug', price: 449, image: '/images/sparkles-dishwash-lemon-5l.png', imageAlt: "Mommy D's Sparkles lemon dishwashing liquid 5 litre jug — grease-cutting kitchen soap, Kenya", desc: 'Lemon dish wash — green jug label style. Cuts grease, 5 Litres.', category: 'Kitchen', stock: 120 },
+    { id: 13, name: 'Fabric Softener — floral jug', price: 900, image: '/images/sparkles-fabric-softener-5l.png', imageAlt: 'Sparkles fabric softener 5 litre pink bottle — long-lasting floral fragrance, Kenya', desc: 'Softener with floral artwork on jug. Long-lasting fragrance, 5 Litres.', category: 'Laundry', stock: 70 }
+];
 
-/**
- * Firestore product docs override the shop HTML defaults. After deploy, push new image URLs into
- * existing docs when they still use placeholders or old filenames (keeps price/stock/name as set in admin).
- */
-async function mergeProductMediaFromCatalog() {
+const PRODUCT_CATALOG_ALL = [...PRODUCT_CATALOG_LEGACY_1_7, ...PRODUCT_CATALOG_NEW_8_13];
+
+/** Keep legacy photos on ids 1–7 (image + imageAlt only; preserves price, stock, name from admin). */
+async function syncLegacyProductMedia1to7() {
     const updated = [];
-    for (const row of PRODUCT_CATALOG_DEFAULTS) {
+    for (const row of PRODUCT_CATALOG_LEGACY_1_7) {
         const ref = productsRef.doc(String(row.id));
         const doc = await ref.get();
         if (!doc.exists) continue;
-        const data = doc.data() || {};
-        const stale = shouldRefreshProductImageUrl(data.image);
-        const missingAlt = !String(data.imageAlt || '').trim();
-        if (!stale && !missingAlt) continue;
-        const updates = {};
-        if (stale) {
-            updates.image = row.image;
-            updates.imageAlt = row.imageAlt;
-        } else if (missingAlt) {
-            updates.imageAlt = row.imageAlt;
-        }
-        await ref.update(updates);
+        await ref.update({ image: row.image, imageAlt: row.imageAlt });
         updated.push(row.id);
     }
     if (updated.length) {
-        console.log('Updated product image fields in Firestore for ids:', updated.join(', '));
+        console.log('Synced legacy product images for ids 1–7:', updated.join(', '));
+    }
+}
+
+/** Create products 8–13 if missing (adds new photos without removing 1–7). */
+async function ensureExtendedProducts8to13() {
+    const created = [];
+    for (const row of PRODUCT_CATALOG_NEW_8_13) {
+        const ref = productsRef.doc(String(row.id));
+        const doc = await ref.get();
+        if (doc.exists) continue;
+        await ref.set({ ...row });
+        created.push(row.id);
+    }
+    if (created.length) {
+        console.log('Created extended catalog products:', created.join(', '));
     }
 }
 
 async function seedProductsIfEmpty() {
     const snap = await productsRef.limit(1).get();
     if (!snap.empty) return;
-    for (const row of PRODUCT_CATALOG_DEFAULTS) {
+    for (const row of PRODUCT_CATALOG_ALL) {
         const { id, ...rest } = row;
         await productsRef.doc(String(id)).set({ ...rest, id });
     }
-    console.log('Seeded default products');
+    console.log('Seeded default products (13 items)');
 }
 
 app.get('/api/products', async (req, res) => {
@@ -842,7 +849,8 @@ app.delete('/api/admin/products/:id', async (req, res) => {
 });
 
 seedProductsIfEmpty()
-    .then(() => mergeProductMediaFromCatalog())
+    .then(() => syncLegacyProductMedia1to7())
+    .then(() => ensureExtendedProducts8to13())
     .catch(console.error);
 ensureDefaultAdmin().catch(console.error);
 

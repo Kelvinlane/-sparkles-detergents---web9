@@ -12,14 +12,19 @@
             <image:caption>Sparkles Detergents cleaning products banner</image:caption>
         </image:image>
         <image:image>
-            <image:loc>https://www.sparklesdetergents.com/images/sparkles-liquid-laundry-5l.png</image:loc>
-            <image:title>Sparkles liquid laundry detergent 5L Kenya</image:title>
-            <image:caption>Blue 5 litre laundry detergent jerrycan Nairobi</image:caption>
+            <image:loc>https://www.sparklesdetergents.com/images/Dofoto_20260105_151624084.jpg</image:loc>
+            <image:title>Liquid laundry detergent 5L Sparkles Kenya</image:title>
+            <image:caption>Original listing photo — 5 litre laundry detergent</image:caption>
         </image:image>
         <image:image>
-            <image:loc>https://www.sparklesdetergents.com/images/sparkles-shower-gel-pink-5l.png</image:loc>
-            <image:title>Sparkles shower gel 5L Kenya</image:title>
-            <image:caption>Pink moisturizing body wash 5 litres</image:caption>
+            <image:loc>https://www.sparklesdetergents.com/images/sparkles-liquid-laundry-5l.png</image:loc>
+            <image:title>Sparkles liquid laundry blue jug 5L Kenya</image:title>
+            <image:caption>Additional pack photo — blue jerrycan</image:caption>
+        </image:image>
+        <image:image>
+            <image:loc>https://www.sparklesdetergents.com/images/sparkles-shower-gel-red-5l.png</image:loc>
+            <image:title>Sparkles shower gel red jug 5L Kenya</image:title>
+            <image:caption>Red pack shower gel 5 litres</image:caption>
         </image:image>
         <image:image>
             <image:loc>https://www.sparklesdetergents.com/images/Dofoto_20260106_131334771.jpg</image:loc>
@@ -43,6 +48,14 @@
         <image:image>
             <image:loc>https://www.sparklesdetergents.com/images/sparkles-fabric-softener-5l.png</image:loc>
             <image:title>Fabric softener 5L Sparkles Detergents Kenya</image:title>
+        </image:image>
+        <image:image>
+            <image:loc>https://www.sparklesdetergents.com/images/sparkles-hair-shampoo-5l.png</image:loc>
+            <image:title>Hair shampoo 5L Sparkles Kenya</image:title>
+        </image:image>
+        <image:image>
+            <image:loc>https://www.sparklesdetergents.com/images/sparkles-shower-gel-pink-5l.png</image:loc>
+            <image:title>Shower gel pink jug 5L Sparkles Kenya</image:title>
         </image:image>
     </url>
     <url>
