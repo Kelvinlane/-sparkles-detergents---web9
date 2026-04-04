@@ -713,67 +713,70 @@ app.get('/api/admin/order/:id', async (req, res) => {
 });
 
 /**
- * Original seven products — keep these photos (paths root-relative).
- * Six newer pack-shot images are separate products (ids 8–13), not replacements.
+ * Full catalog: sortOrder controls shop + API list (pairs grouped, shower gels adjacent).
+ * On sync we update name, desc, category, image, imageAlt, sortOrder — not price/stock.
  */
-const PRODUCT_CATALOG_LEGACY_1_7 = [
-    { id: 1, name: 'Liquid Laundry', price: 600, image: '/images/Dofoto_20260105_151624084.jpg', imageAlt: 'Liquid laundry detergent 5 litre bottle Sparkles Detergents Kenya', desc: 'Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.', category: 'Laundry', stock: 100 },
-    { id: 2, name: 'Hair Shampoo', price: 699, image: '/images/ChatGPT Image Feb 20, 2026, 11_37_30 AM.png', imageAlt: 'Hair shampoo 5 litre Sparkles bulk bottle Kenya', desc: 'Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.', category: 'Personal Care', stock: 80 },
-    { id: 3, name: 'Shower Gel', price: 749, image: '/images/Dofoto_20260106_130957947.jpg', imageAlt: 'Shower gel body wash 5 litre Sparkles Detergents Kenya', desc: 'Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.', category: 'Personal Care', stock: 75 },
-    { id: 4, name: 'Multi-purpose Detergent', price: 549, image: '/images/Dofoto_20260106_131334771.jpg', imageAlt: 'Multi-purpose surface cleaner 5 litre Sparkles Kenya', desc: 'All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.', category: 'Household', stock: 90 },
-    { id: 5, name: 'Dish Washing Liquid', price: 449, image: '/images/Dofoto_20260105_150608139.jpg', imageAlt: 'Dish washing liquid 5 litre Sparkles Kenya', desc: 'Cuts through grease instantly. Lemon fresh scent. 5 Litres.', category: 'Kitchen', stock: 120 },
-    { id: 6, name: 'Bleach', price: 499, image: '/images/Dofoto_20260105_145304900.jpg', imageAlt: 'Laundry bleach 5 litre whitening Sparkles Kenya', desc: 'Strong whitening and disinfecting action. 5 Litres.', category: 'Laundry', stock: 85 },
-    { id: 7, name: 'Fabric Softener', price: 900, image: '/images/Dofoto_20260105_150739737.jpg', imageAlt: 'Fabric softener 5 litre Sparkles floral Kenya', desc: 'Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.', category: 'Laundry', stock: 70 }
+const PRODUCT_CATALOG = [
+    { sortOrder: 1, id: 1, name: 'Liquid Laundry', price: 600, image: '/images/Dofoto_20260105_151624084.jpg', imageAlt: 'Liquid laundry detergent 5 litre bottle Sparkles Detergents Kenya', desc: 'Your everyday 5L workhorse — tough on stains, gentle on hands and colours. Ideal for family loads and weekly washing.', category: 'Laundry', stock: 100 },
+    { sortOrder: 2, id: 8, name: 'Liquid Laundry — Skyline', price: 600, image: '/images/sparkles-liquid-laundry-5l.png', imageAlt: 'Sparkles 5 litre blue liquid laundry detergent jerrycan — smart dirt removal, Nairobi Kenya', desc: 'Same trusted Sparkles formula in the bold blue jerrycan — easy to spot on the shelf. Crisp clean finish with our smart dirt-removal branding.', category: 'Laundry', stock: 100 },
+    { sortOrder: 3, id: 2, name: 'Hair Shampoo', price: 699, image: '/images/ChatGPT Image Feb 20, 2026, 11_37_30 AM.png', imageAlt: 'Hair shampoo 5 litre Sparkles bulk bottle Kenya', desc: 'Rich lather for the whole household; natural extracts help keep hair soft and manageable. Salon-quality value in every pour.', category: 'Personal Care', stock: 80 },
+    { sortOrder: 4, id: 9, name: 'Hair Shampoo — Silk Sheen', price: 699, image: '/images/sparkles-hair-shampoo-5l.png', imageAlt: 'Sparkles Hair Shampoo 5 litre blue jug — colour care and shine, Nairobi Kenya', desc: 'The same nourishing line in a sleek blue jug — we lean into colour care, detangling, and extra shine for treated or ageing hair.', category: 'Personal Care', stock: 80 },
+    { sortOrder: 5, id: 3, name: 'Shower Gel', price: 749, image: '/images/Dofoto_20260106_130957947.jpg', imageAlt: 'Shower gel body wash 5 litre Sparkles Detergents Kenya', desc: 'Refreshing, moisturising body wash with a long-lasting scent — your reliable daily gel in the classic pack.', category: 'Personal Care', stock: 75 },
+    { sortOrder: 6, id: 10, name: 'Shower Gel — Blush', price: 749, image: '/images/sparkles-shower-gel-pink-5l.png', imageAlt: 'Sparkles pink shower gel 5 litre — moisturising body wash, Nairobi Kenya', desc: 'Pink-pack edition with a soft, playful fruit-floral mood. Moisturising feel for daily showers — pick Blush when you want a brighter bathroom accent.', category: 'Personal Care', stock: 75 },
+    { sortOrder: 7, id: 11, name: 'Shower Gel — Berry', price: 749, image: '/images/sparkles-shower-gel-red-5l.png', imageAlt: 'Sparkles red shower gel 5 litre — berry body wash, Nairobi Kenya', desc: 'Red jug “Berry” edition — vibrant, juicy notes with the same cleansing power. A fun scent rotation next to Blush for scent-loving households.', category: 'Personal Care', stock: 75 },
+    { sortOrder: 8, id: 4, name: 'Multi-purpose Detergent', price: 549, image: '/images/Dofoto_20260106_131334771.jpg', imageAlt: 'Multi-purpose surface cleaner 5 litre Sparkles Kenya', desc: 'One bottle for floors, tiles, and kitchen tops — cuts through daily grime so you can tidy faster.', category: 'Household', stock: 90 },
+    { sortOrder: 9, id: 5, name: 'Dish Washing Liquid', price: 449, image: '/images/Dofoto_20260105_150608139.jpg', imageAlt: 'Dish washing liquid 5 litre Sparkles Kenya', desc: 'Fast grease cutting with a familiar lemon freshness — the dependable Sparkles dish wash for busy kitchens.', category: 'Kitchen', stock: 120 },
+    { sortOrder: 10, id: 12, name: 'Dish Washing Liquid — Zesty Lemon', price: 449, image: '/images/sparkles-dishwash-lemon-5l.png', imageAlt: "Mommy D's Sparkles lemon dishwashing liquid 5 litre jug — Kenya", desc: 'Green-jug style with lime graphics on the label — same degreasing punch, bolder citrus story for displays that pop.', category: 'Kitchen', stock: 120 },
+    { sortOrder: 11, id: 6, name: 'Bleach', price: 499, image: '/images/Dofoto_20260105_145304900.jpg', imageAlt: 'Laundry bleach 5 litre whitening Sparkles Kenya', desc: 'Strong whitening and disinfecting for whites and heavy-duty laundry. Use as directed — 5 litres.', category: 'Laundry', stock: 85 },
+    { sortOrder: 12, id: 7, name: 'Fabric Softener', price: 900, image: '/images/Dofoto_20260105_150739737.jpg', imageAlt: 'Fabric softener 5 litre Sparkles floral Kenya', desc: 'Fluffy towels and soft linens — a balanced floral note that lingers gently after the wash.', category: 'Laundry', stock: 70 },
+    { sortOrder: 13, id: 13, name: 'Fabric Softener — Petal Fresh', price: 900, image: '/images/sparkles-fabric-softener-5l.png', imageAlt: 'Sparkles fabric softener 5 litre pink bottle — floral fragrance, Kenya', desc: 'Pink floral-jug design with plumeria-style cues — emphasises long-lasting fragrance for bedding and favourites. Same soft finish, show-stopping pack.', category: 'Laundry', stock: 70 }
 ];
 
-/** Six additional listings using the new pack photography (ids 8–13). */
-const PRODUCT_CATALOG_NEW_8_13 = [
-    { id: 8, name: 'Liquid Laundry (blue jug)', price: 600, image: '/images/sparkles-liquid-laundry-5l.png', imageAlt: 'Sparkles 5 litre blue liquid laundry detergent in a jerrycan — smart dirt removal, washing machine graphic, Nairobi Kenya', desc: 'Same great formula — alternate label and jug style. Powerful stain removal, 5 Litres.', category: 'Laundry', stock: 100 },
-    { id: 9, name: 'Hair Shampoo (salon jug)', price: 699, image: '/images/sparkles-hair-shampoo-5l.png', imageAlt: 'Sparkles Hair Shampoo 5 litre bulk bottle — colour care, shine and detangling, Nairobi Kenya', desc: 'Same line — shown in blue salon-style jug. Nourishing formula, 5 Litres.', category: 'Personal Care', stock: 80 },
-    { id: 10, name: 'Shower Gel — pink jug', price: 749, image: '/images/sparkles-shower-gel-pink-5l.png', imageAlt: 'Sparkles Detergents pink shower gel 5 litre — moisturizing body wash, Nairobi Kenya', desc: 'Moisturizing body wash — pink pack. All natural feel, 5 Litres.', category: 'Personal Care', stock: 75 },
-    { id: 11, name: 'Shower Gel — red jug', price: 749, image: '/images/sparkles-shower-gel-red-5l.png', imageAlt: 'Sparkles Detergents red shower gel 5 litre — moisturizing body wash, Nairobi Kenya', desc: 'Moisturizing body wash — red pack variant. 5 Litres.', category: 'Personal Care', stock: 75 },
-    { id: 12, name: 'Dish Washing Liquid — lemon jug', price: 449, image: '/images/sparkles-dishwash-lemon-5l.png', imageAlt: "Mommy D's Sparkles lemon dishwashing liquid 5 litre jug — grease-cutting kitchen soap, Kenya", desc: 'Lemon dish wash — green jug label style. Cuts grease, 5 Litres.', category: 'Kitchen', stock: 120 },
-    { id: 13, name: 'Fabric Softener — floral jug', price: 900, image: '/images/sparkles-fabric-softener-5l.png', imageAlt: 'Sparkles fabric softener 5 litre pink bottle — long-lasting floral fragrance, Kenya', desc: 'Softener with floral artwork on jug. Long-lasting fragrance, 5 Litres.', category: 'Laundry', stock: 70 }
-];
-
-const PRODUCT_CATALOG_ALL = [...PRODUCT_CATALOG_LEGACY_1_7, ...PRODUCT_CATALOG_NEW_8_13];
-
-/** Keep legacy photos on ids 1–7 (image + imageAlt only; preserves price, stock, name from admin). */
-async function syncLegacyProductMedia1to7() {
-    const updated = [];
-    for (const row of PRODUCT_CATALOG_LEGACY_1_7) {
-        const ref = productsRef.doc(String(row.id));
-        const doc = await ref.get();
-        if (!doc.exists) continue;
-        await ref.update({ image: row.image, imageAlt: row.imageAlt });
-        updated.push(row.id);
-    }
-    if (updated.length) {
-        console.log('Synced legacy product images for ids 1–7:', updated.join(', '));
-    }
+function sortProductsByCatalogOrder(products) {
+    return [...products].sort((a, b) => {
+        const sa = a.sortOrder != null ? Number(a.sortOrder) : 999;
+        const sb = b.sortOrder != null ? Number(b.sortOrder) : 999;
+        if (sa !== sb) return sa - sb;
+        return (a.id || 0) - (b.id || 0);
+    });
 }
 
-/** Create products 8–13 if missing (adds new photos without removing 1–7). */
-async function ensureExtendedProducts8to13() {
-    const created = [];
-    for (const row of PRODUCT_CATALOG_NEW_8_13) {
+/** Create missing docs and sync display fields (keeps existing price + stock). */
+async function syncProductCatalogToFirestore() {
+    let touched = 0;
+    for (const row of PRODUCT_CATALOG) {
         const ref = productsRef.doc(String(row.id));
         const doc = await ref.get();
-        if (doc.exists) continue;
-        await ref.set({ ...row });
-        created.push(row.id);
+        const payload = {
+            name: row.name,
+            desc: row.desc,
+            category: row.category,
+            image: row.image,
+            imageAlt: row.imageAlt,
+            sortOrder: row.sortOrder
+        };
+        if (!doc.exists) {
+            await ref.set({
+                ...payload,
+                id: row.id,
+                price: row.price,
+                stock: row.stock
+            });
+            touched += 1;
+            continue;
+        }
+        await ref.update(payload);
+        touched += 1;
     }
-    if (created.length) {
-        console.log('Created extended catalog products:', created.join(', '));
-    }
+    if (touched) console.log('Product catalog synced to Firestore:', PRODUCT_CATALOG.length, 'items (sort order + copy + images)');
 }
 
 async function seedProductsIfEmpty() {
     const snap = await productsRef.limit(1).get();
     if (!snap.empty) return;
-    for (const row of PRODUCT_CATALOG_ALL) {
-        const { id, ...rest } = row;
-        await productsRef.doc(String(id)).set({ ...rest, id });
+    for (const row of PRODUCT_CATALOG) {
+        const { sortOrder, id, ...rest } = row;
+        await productsRef.doc(String(id)).set({ ...rest, id, sortOrder });
     }
     console.log('Seeded default products (13 items)');
 }
@@ -781,7 +784,7 @@ async function seedProductsIfEmpty() {
 app.get('/api/products', async (req, res) => {
     try {
         const snap = await productsRef.orderBy('id').get();
-        const products = snap.docs.map(d => ({ id: parseInt(d.id), ...d.data() }));
+        const products = sortProductsByCatalogOrder(snap.docs.map(d => ({ id: parseInt(d.id), ...d.data() })));
         res.json(products);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -791,7 +794,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/admin/products', async (req, res) => {
     try {
         const snap = await productsRef.orderBy('id').get();
-        const products = snap.docs.map(d => ({ id: parseInt(d.id), ...d.data() }));
+        const products = sortProductsByCatalogOrder(snap.docs.map(d => ({ id: parseInt(d.id), ...d.data() })));
         res.json(products);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -804,10 +807,12 @@ app.post('/api/admin/products', async (req, res) => {
         if (!name || price == null) return res.status(400).json({ error: 'Name and price required' });
         const snap = await productsRef.orderBy('id', 'desc').limit(1).get();
         const nextId = snap.empty ? 1 : (snap.docs[0].data().id || parseInt(snap.docs[0].id)) + 1;
+        const sortOrder = req.body.sortOrder != null ? parseInt(req.body.sortOrder, 10) : 999;
         const doc = {
             name, price: parseInt(price) || 0, image: image || '',
             imageAlt: imageAlt || '',
-            desc: desc || '', category: category || '', stock: parseInt(stock) || 0, id: nextId
+            desc: desc || '', category: category || '', stock: parseInt(stock) || 0, id: nextId,
+            sortOrder: Number.isFinite(sortOrder) ? sortOrder : 999
         };
         await productsRef.doc(String(nextId)).set(doc);
         res.json({ success: true, product: { id: nextId, ...doc } });
@@ -819,7 +824,7 @@ app.post('/api/admin/products', async (req, res) => {
 app.put('/api/admin/products/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const { name, price, image, imageAlt, desc, category, stock } = req.body;
+        const { name, price, image, imageAlt, desc, category, stock, sortOrder } = req.body;
         const ref = productsRef.doc(id);
         const doc = await ref.get();
         if (!doc.exists) return res.status(404).json({ error: 'Product not found' });
@@ -831,6 +836,10 @@ app.put('/api/admin/products/:id', async (req, res) => {
         if (desc !== undefined) updates.desc = desc;
         if (category !== undefined) updates.category = category;
         if (stock !== undefined) updates.stock = parseInt(stock);
+        if (sortOrder !== undefined) {
+            const so = parseInt(sortOrder, 10);
+            if (Number.isFinite(so)) updates.sortOrder = so;
+        }
         await ref.update(updates);
         res.json({ success: true });
     } catch (err) {
@@ -849,8 +858,7 @@ app.delete('/api/admin/products/:id', async (req, res) => {
 });
 
 seedProductsIfEmpty()
-    .then(() => syncLegacyProductMedia1to7())
-    .then(() => ensureExtendedProducts8to13())
+    .then(() => syncProductCatalogToFirestore())
     .catch(console.error);
 ensureDefaultAdmin().catch(console.error);
 
