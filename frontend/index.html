@@ -21,7 +21,7 @@
     <meta name="twitter:description" content="Premium detergents in Nairobi. Free delivery.">
     <meta name="twitter:image" content="https://www.sparklesdetergents.com/images/Gemini_Generated_Image_3uc5ys3uc5ys3uc5.png">
     <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://www.sparklesdetergents.com/#organization","name":"Sparkles Detergents","url":"https://www.sparklesdetergents.com/","logo":{"@type":"ImageObject","url":"https://www.sparklesdetergents.com/favicon.svg"},"image":"https://www.sparklesdetergents.com/images/Gemini_Generated_Image_3uc5ys3uc5ys3uc5.png","description":"Quality detergents and cleaning products in Kenya.","address":{"@type":"PostalAddress","addressLocality":"Nairobi","addressCountry":"KE"},"telephone":"+254759102078","email":"sparklesdetergentskenya@gmail.com"},{"@type":"WebSite","@id":"https://www.sparklesdetergents.com/#website","url":"https://www.sparklesdetergents.com/","name":"Sparkles Detergents","publisher":{"@id":"https://www.sparklesdetergents.com/#organization"},"inLanguage":"en-KE"},{"@type":"ItemList","name":"Featured Sparkles Detergents","numberOfItems":3,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"Product","name":"Liquid Laundry","description":"Powerful stain removal for all fabrics. 5 Litres.","image":"https://www.sparklesdetergents.com/images/Dofoto_20260105_145304900.jpg","brand":{"@type":"Brand","name":"Sparkles Detergents"},"offers":{"@type":"Offer","priceCurrency":"KES","price":"600","availability":"https://schema.org/InStock","url":"https://www.sparklesdetergents.com/detergents.html"}}},{"@type":"ListItem","position":2,"item":{"@type":"Product","name":"Hair Shampoo","description":"Nourishing formula for silky smooth hair. 5 Litres.","image":"https://www.sparklesdetergents.com/images/ChatGPT%20Image%20Feb%2020%2C%202026%2C%2011_37_30%20AM.png","brand":{"@type":"Brand","name":"Sparkles Detergents"},"offers":{"@type":"Offer","priceCurrency":"KES","price":"699","availability":"https://schema.org/InStock","url":"https://www.sparklesdetergents.com/detergents.html"}}},{"@type":"ListItem","position":3,"item":{"@type":"Product","name":"Shower Gel","description":"Refreshing moisturizing body wash. 5 Litres.","image":"https://www.sparklesdetergents.com/images/Dofoto_20260106_130957947.jpg","brand":{"@type":"Brand","name":"Sparkles Detergents"},"offers":{"@type":"Offer","priceCurrency":"KES","price":"749","availability":"https://schema.org/InStock","url":"https://www.sparklesdetergents.com/detergents.html"}}}]}]}
+{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://www.sparklesdetergents.com/#organization","name":"Sparkles Detergents","url":"https://www.sparklesdetergents.com/","logo":{"@type":"ImageObject","url":"https://www.sparklesdetergents.com/favicon.svg"},"image":"https://www.sparklesdetergents.com/images/Gemini_Generated_Image_3uc5ys3uc5ys3uc5.png","description":"Quality detergents and cleaning products in Kenya.","address":{"@type":"PostalAddress","addressLocality":"Nairobi","addressCountry":"KE"},"telephone":"+254759102078","email":"sparklesdetergentskenya@gmail.com"},{"@type":"WebSite","@id":"https://www.sparklesdetergents.com/#website","url":"https://www.sparklesdetergents.com/","name":"Sparkles Detergents","publisher":{"@id":"https://www.sparklesdetergents.com/#organization"},"inLanguage":"en-KE"},{"@type":"ItemList","name":"Featured Sparkles Detergents","numberOfItems":3,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"Product","name":"Liquid Laundry","description":"Powerful stain removal for all fabrics. 5 Litres.","image":"https://www.sparklesdetergents.com/images/sparkles-liquid-laundry-5l.png","brand":{"@type":"Brand","name":"Sparkles Detergents"},"offers":{"@type":"Offer","priceCurrency":"KES","price":"600","availability":"https://schema.org/InStock","url":"https://www.sparklesdetergents.com/detergents.html"}}},{"@type":"ListItem","position":2,"item":{"@type":"Product","name":"Hair Shampoo","description":"Nourishing formula for silky smooth hair. 5 Litres.","image":"https://www.sparklesdetergents.com/images/sparkles-hair-shampoo-5l.png","brand":{"@type":"Brand","name":"Sparkles Detergents"},"offers":{"@type":"Offer","priceCurrency":"KES","price":"699","availability":"https://schema.org/InStock","url":"https://www.sparklesdetergents.com/detergents.html"}}},{"@type":"ListItem","position":3,"item":{"@type":"Product","name":"Shower Gel","description":"Refreshing moisturizing body wash. 5 Litres.","image":"https://www.sparklesdetergents.com/images/sparkles-shower-gel-pink-5l.png","brand":{"@type":"Brand","name":"Sparkles Detergents"},"offers":{"@type":"Offer","priceCurrency":"KES","price":"749","availability":"https://schema.org/InStock","url":"https://www.sparklesdetergents.com/detergents.html"}}}]}]}
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -115,14 +115,46 @@
                  onerror="this.src='https://placehold.co/1920x600/1e3a8a/ffffff?text=Sparkles+Detergents+Banner'">
         </div>
 
-        <section class="featured-band">
+        <section class="featured-band" aria-labelledby="shop-categories-heading">
         <div class="max-w-7xl mx-auto px-4 py-10 sm:py-12">
-            <h2 class="text-3xl sm:text-4xl font-bold text-center mb-10 sm:mb-12 text-blue-950 drop-shadow-sm">Featured Products</h2>
-            <div id="featured-products-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="col-span-full text-center py-8 text-gray-500">Loading products...</div>
-            </div>
+            <h2 id="shop-categories-heading" class="text-3xl sm:text-4xl font-bold text-center mb-3 text-blue-950 drop-shadow-sm">Shop by category</h2>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-10 sm:mb-12 text-sm sm:text-base">Bulk 5L detergents and cleaners for home and business — pick a category to jump straight into the shop.</p>
+            <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 list-none p-0 m-0">
+                <li>
+                    <a href="detergents.html?cat=Laundry" class="group flex flex-col h-full rounded-2xl border-2 border-blue-100 bg-white/95 p-6 shadow-md hover:border-blue-400 hover:shadow-xl transition duration-300">
+                        <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-blue-800 text-2xl" aria-hidden="true"><i class="fas fa-shirt"></i></span>
+                        <h3 class="text-xl font-bold text-blue-900 group-hover:text-blue-700">Laundry</h3>
+                        <p class="mt-2 text-sm text-gray-600 flex-1">Liquid laundry detergent, bleach, fabric softener — fresh clothes and linens.</p>
+                        <span class="mt-4 text-sm font-semibold text-blue-700">Browse laundry <i class="fas fa-arrow-right ml-1 text-xs" aria-hidden="true"></i></span>
+                    </a>
+                </li>
+                <li>
+                    <a href="detergents.html?cat=Personal%20Care" class="group flex flex-col h-full rounded-2xl border-2 border-blue-100 bg-white/95 p-6 shadow-md hover:border-blue-400 hover:shadow-xl transition duration-300">
+                        <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-100 text-indigo-800 text-2xl" aria-hidden="true"><i class="fas fa-pump-soap"></i></span>
+                        <h3 class="text-xl font-bold text-blue-900 group-hover:text-blue-700">Personal care</h3>
+                        <p class="mt-2 text-sm text-gray-600 flex-1">Hair shampoo, shower gel — moisturizing formulas in large 5L sizes.</p>
+                        <span class="mt-4 text-sm font-semibold text-blue-700">Browse personal care <i class="fas fa-arrow-right ml-1 text-xs" aria-hidden="true"></i></span>
+                    </a>
+                </li>
+                <li>
+                    <a href="detergents.html?cat=Household" class="group flex flex-col h-full rounded-2xl border-2 border-blue-100 bg-white/95 p-6 shadow-md hover:border-blue-400 hover:shadow-xl transition duration-300">
+                        <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-sky-100 text-sky-800 text-2xl" aria-hidden="true"><i class="fas fa-house-chimney"></i></span>
+                        <h3 class="text-xl font-bold text-blue-900 group-hover:text-blue-700">Household</h3>
+                        <p class="mt-2 text-sm text-gray-600 flex-1">Multi-surface cleaners for floors, tiles, and everyday messes.</p>
+                        <span class="mt-4 text-sm font-semibold text-blue-700">Browse household <i class="fas fa-arrow-right ml-1 text-xs" aria-hidden="true"></i></span>
+                    </a>
+                </li>
+                <li>
+                    <a href="detergents.html?cat=Kitchen" class="group flex flex-col h-full rounded-2xl border-2 border-blue-100 bg-white/95 p-6 shadow-md hover:border-blue-400 hover:shadow-xl transition duration-300">
+                        <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 text-2xl" aria-hidden="true"><i class="fas fa-utensils"></i></span>
+                        <h3 class="text-xl font-bold text-blue-900 group-hover:text-blue-700">Kitchen</h3>
+                        <p class="mt-2 text-sm text-gray-600 flex-1">Dish washing liquid — cuts grease with a fresh lemon scent.</p>
+                        <span class="mt-4 text-sm font-semibold text-blue-700">Browse kitchen <i class="fas fa-arrow-right ml-1 text-xs" aria-hidden="true"></i></span>
+                    </a>
+                </li>
+            </ul>
             <div class="text-center mt-12">
-                <a href="detergents.html" class="inline-block border-2 border-blue-900 text-blue-900 bg-white/70 px-8 py-3 rounded-full font-bold hover:bg-blue-900 hover:text-white transition shadow-sm">View All Products</a>
+                <a href="detergents.html" class="inline-block border-2 border-blue-900 text-blue-900 bg-white/70 px-8 py-3 rounded-full font-bold hover:bg-blue-900 hover:text-white transition shadow-sm">View all products</a>
             </div>
         </div>
         </section>
@@ -360,13 +392,13 @@
         })();
 
         const DEFAULT_PRODUCTS = [
-            { id: 1, name: "Liquid Laundry", price: 600, image: "./images/Dofoto_20260105_145304900.jpg", desc: "Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.", category: "Laundry", stock: 100 },
-            { id: 2, name: "Hair Shampoo", price: 699, image: "./images/ChatGPT Image Feb 20, 2026, 11_37_30 AM.png", desc: "Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.", category: "Personal Care", stock: 80 },
-            { id: 3, name: "Shower Gel", price: 749, image: "./images/Dofoto_20260106_130957947.jpg", desc: "Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.", category: "Personal Care", stock: 75 },
-            { id: 4, name: "Multi-purpose Detergent", price: 549, image: "./images/Dofoto_20260106_131334771.jpg", desc: "All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.", category: "Household", stock: 90 },
-            { id: 5, name: "Dish Washing Liquid", price: 449, image: "./images/Dofoto_20260105_150608139.jpg", desc: "Cuts through grease instantly. Lemon fresh scent. 5 Litres.", category: "Kitchen", stock: 120 },
-            { id: 6, name: "Bleach", price: 499, image: "./images/Dofoto_20260105_145304900.jpg", desc: "Strong whitening and disinfecting action. 5 Litres.", category: "Laundry", stock: 85 },
-            { id: 7, name: "Fabric Softener", price: 900, image: "./images/Dofoto_20260105_150739737.jpg", desc: "Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.", category: "Laundry", stock: 70 }
+            { id: 1, name: "Liquid Laundry", price: 600, image: "./images/sparkles-liquid-laundry-5l.png", imageAlt: "Sparkles 5 litre blue liquid laundry detergent in a jerrycan — smart dirt removal, washing machine graphic, Nairobi Kenya", desc: "Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.", category: "Laundry", stock: 100 },
+            { id: 2, name: "Hair Shampoo", price: 699, image: "./images/sparkles-hair-shampoo-5l.png", imageAlt: "Sparkles Hair Shampoo 5 litre bulk bottle — colour care, shine and detangling, Nairobi Kenya", desc: "Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.", category: "Personal Care", stock: 80 },
+            { id: 3, name: "Shower Gel", price: 749, image: "./images/sparkles-shower-gel-pink-5l.png", imageAlt: "Sparkles Detergents pink shower gel 5 litre — moisturizing body wash, Nairobi Kenya", desc: "Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.", category: "Personal Care", stock: 75 },
+            { id: 4, name: "Multi-purpose Detergent", price: 549, image: "./images/Dofoto_20260106_131334771.jpg", imageAlt: "Sparkles multi-purpose surface detergent 5 litre — floors, tiles and kitchen tops, Kenya", desc: "All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.", category: "Household", stock: 90 },
+            { id: 5, name: "Dish Washing Liquid", price: 449, image: "./images/sparkles-dishwash-lemon-5l.png", imageAlt: "Mommy D's Sparkles lemon dishwashing liquid 5 litre jug — grease-cutting kitchen soap, Kenya", desc: "Cuts through grease instantly. Lemon fresh scent. 5 Litres.", category: "Kitchen", stock: 120 },
+            { id: 6, name: "Bleach", price: 499, image: "./images/Dofoto_20260105_145304900.jpg", imageAlt: "Sparkles laundry bleach 5 litre — whitening and disinfecting, Kenya", desc: "Strong whitening and disinfecting action. 5 Litres.", category: "Laundry", stock: 85 },
+            { id: 7, name: "Fabric Softener", price: 900, image: "./images/sparkles-fabric-softener-5l.png", imageAlt: "Sparkles fabric softener 5 litre pink bottle — long-lasting floral fragrance, Kenya", desc: "Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.", category: "Laundry", stock: 70 }
         ];
         let products = [...DEFAULT_PRODUCTS];
         let cart = [];
@@ -414,30 +446,6 @@
                 const data = await res.json();
                 if (Array.isArray(data) && data.length) products = data;
             } catch (e) { /* use defaults */ }
-            renderFeaturedProducts();
-        }
-        function renderFeaturedProducts() {
-            const grid = document.getElementById('featured-products-grid');
-            const featured = products.slice(0, 3);
-            grid.innerHTML = featured.map(p => `
-                <div class="bg-white/95 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group border border-blue-100/80">
-                    <div class="relative h-56 sm:h-64 overflow-hidden bg-slate-100/90 cursor-pointer flex items-center justify-center p-3" onclick="openProductModal(${p.id})">
-                        <img src="${p.image || 'https://placehold.co/400x600/3b82f6/ffffff?text=Product'}" alt="${String(p.name || 'Product').replace(/"/g, '&quot;')} — Sparkles Detergents 5 litre, Kenya" class="w-full h-full max-h-[16rem] object-contain group-hover:scale-[1.03] transition duration-500">
-                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">5L</div>
-                    </div>
-                    <div class="p-6 flex-1 flex flex-col">
-                        <h3 class="text-xl font-bold text-gray-800 cursor-pointer hover:text-blue-600" onclick="openProductModal(${p.id})">${p.name}</h3>
-                        <p class="text-gray-500 text-sm mb-4">${p.desc || ''}</p>
-                        <div class="mt-auto flex items-center justify-between">
-                            <span class="text-2xl font-bold text-blue-600">Ksh ${p.price}</span>
-                            <button onclick="addToCart(${p.id})" ${((parseInt(p.stock, 10) || 0) <= 0) ? 'disabled' : ''} class="bg-blue-100 text-blue-600 p-3 rounded-full hover:bg-blue-600 hover:text-white transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-200 disabled:hover:text-gray-400"><i class="fas fa-plus"></i></button>
-                        </div>
-                        <div class="mt-2 text-xs ${((parseInt(p.stock, 10) || 0) <= 0) ? 'text-red-600' : 'text-gray-500'}">
-                            ${((parseInt(p.stock, 10) || 0) <= 0) ? 'Out of stock' : ('In stock: ' + (parseInt(p.stock, 10) || 0))}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
         }
         let currentUser = typeof getCustomerUser === 'function' ? getCustomerUser() : null;
 
@@ -475,7 +483,7 @@
             if(cart.length === 0) container.innerHTML = '<div class="text-center text-gray-500 mt-10 flex flex-col items-center"><i class="fas fa-shopping-basket text-4xl mb-2 text-gray-300"></i>Your cart is empty</div>';
             else container.innerHTML = cart.map(item => `
                 <div class="flex items-center gap-4 bg-white p-3 rounded-lg shadow-sm border">
-                    <img src="${item.image}" class="w-16 h-16 object-cover rounded-md">
+                    <img src="${item.image}" alt="${String(item.imageAlt || item.name || 'Product').replace(/"/g, '&quot;')}" class="w-16 h-16 object-cover rounded-md">
                     <div class="flex-1">
                         <h4 class="font-bold text-sm text-gray-800">${item.name}</h4>
                         <p class="text-blue-600 text-sm font-semibold">Ksh ${item.price}</p>
@@ -505,7 +513,9 @@
         }
         function openProductModal(id) {
             const p = products.find(x => x.id === id);
-            document.getElementById('modal-img').src = p.image;
+            const img = document.getElementById('modal-img');
+            img.src = p.image;
+            img.alt = p.imageAlt || (p.name + ' — Sparkles Detergents 5 litre, Kenya');
             document.getElementById('modal-title').innerText = p.name;
             document.getElementById('modal-price').innerText = `Ksh ${p.price}`;
             document.getElementById('modal-desc').innerText = p.desc;

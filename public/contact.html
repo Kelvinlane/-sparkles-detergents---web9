@@ -443,13 +443,13 @@
 
         // --- Data & State ---
         const DEFAULT_PRODUCTS = [
-            { id: 1, name: "Liquid Laundry", price: 600, image: "https://placehold.co/400x600/3b82f6/ffffff?text=Laundry", desc: "Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.", category: "Laundry", stock: 100 },
-            { id: 2, name: "Hair Shampoo", price: 699, image: "https://placehold.co/400x600/10b981/ffffff?text=Shampoo", desc: "Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.", category: "Personal Care", stock: 80 },
-            { id: 3, name: "Shower Gel", price: 749, image: "https://placehold.co/400x600/0ea5e9/ffffff?text=Shower+Gel", desc: "Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.", category: "Personal Care", stock: 75 },
-            { id: 4, name: "Multi-purpose Detergent", price: 549, image: "https://placehold.co/400x600/f59e0b/ffffff?text=Multi+Purpose", desc: "All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.", category: "Household", stock: 90 },
-            { id: 5, name: "Dish Washing Liquid", price: 449, image: "https://placehold.co/400x600/ef4444/ffffff?text=Dish+Wash", desc: "Cuts through grease instantly. Lemon fresh scent. 5 Litres.", category: "Kitchen", stock: 120 },
-            { id: 6, name: "Bleach", price: 499, image: "https://placehold.co/400x600/6366f1/ffffff?text=Bleach", desc: "Strong whitening and disinfecting action. 5 Litres.", category: "Laundry", stock: 85 },
-            { id: 7, name: "Fabric Softener", price: 900, image: "https://placehold.co/400x600/ec4899/ffffff?text=Softener", desc: "Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.", category: "Laundry", stock: 70 }
+            { id: 1, name: "Liquid Laundry", price: 600, image: "./images/sparkles-liquid-laundry-5l.png", imageAlt: "Sparkles 5 litre blue liquid laundry detergent in a jerrycan — smart dirt removal, washing machine graphic, Nairobi Kenya", desc: "Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.", category: "Laundry", stock: 100 },
+            { id: 2, name: "Hair Shampoo", price: 699, image: "./images/sparkles-hair-shampoo-5l.png", imageAlt: "Sparkles Hair Shampoo 5 litre bulk bottle — colour care, shine and detangling, Nairobi Kenya", desc: "Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.", category: "Personal Care", stock: 80 },
+            { id: 3, name: "Shower Gel", price: 749, image: "./images/sparkles-shower-gel-pink-5l.png", imageAlt: "Sparkles Detergents pink shower gel 5 litre — moisturizing body wash, Nairobi Kenya", desc: "Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.", category: "Personal Care", stock: 75 },
+            { id: 4, name: "Multi-purpose Detergent", price: 549, image: "./images/Dofoto_20260106_131334771.jpg", imageAlt: "Sparkles multi-purpose surface detergent 5 litre — floors, tiles and kitchen tops, Kenya", desc: "All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.", category: "Household", stock: 90 },
+            { id: 5, name: "Dish Washing Liquid", price: 449, image: "./images/sparkles-dishwash-lemon-5l.png", imageAlt: "Mommy D's Sparkles lemon dishwashing liquid 5 litre jug — grease-cutting kitchen soap, Kenya", desc: "Cuts through grease instantly. Lemon fresh scent. 5 Litres.", category: "Kitchen", stock: 120 },
+            { id: 6, name: "Bleach", price: 499, image: "./images/Dofoto_20260105_145304900.jpg", imageAlt: "Sparkles laundry bleach 5 litre — whitening and disinfecting, Kenya", desc: "Strong whitening and disinfecting action. 5 Litres.", category: "Laundry", stock: 85 },
+            { id: 7, name: "Fabric Softener", price: 900, image: "./images/sparkles-fabric-softener-5l.png", imageAlt: "Sparkles fabric softener 5 litre pink bottle — long-lasting floral fragrance, Kenya", desc: "Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.", category: "Laundry", stock: 70 }
         ];
         let products = [...DEFAULT_PRODUCTS];
 
@@ -555,7 +555,7 @@
             } else {
                 container.innerHTML = cart.map(item => `
                     <div class="flex items-center gap-4 bg-white p-3 rounded-lg shadow-sm border">
-                        <img src="${item.image}" class="w-16 h-16 object-cover rounded-md">
+                        <img src="${item.image}" alt="${String(item.imageAlt || item.name || 'Product').replace(/"/g, '&quot;')}" class="w-16 h-16 object-cover rounded-md">
                         <div class="flex-1">
                             <h4 class="font-bold text-sm text-gray-800">${item.name}</h4>
                             <p class="text-blue-600 text-sm font-semibold">Ksh ${item.price}</p>
@@ -595,7 +595,9 @@
         // --- Product Modal ---
         function openProductModal(id) {
             const p = products.find(x => x.id === id);
-            document.getElementById('modal-img').src = p.image;
+            const img = document.getElementById('modal-img');
+            img.src = p.image;
+            img.alt = p.imageAlt || (p.name + ' — Sparkles Detergents 5 litre, Kenya');
             document.getElementById('modal-title').innerText = p.name;
             document.getElementById('modal-price').innerText = `Ksh ${p.price}`;
             document.getElementById('modal-desc').innerText = p.desc;
