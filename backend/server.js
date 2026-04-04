@@ -712,20 +712,61 @@ app.get('/api/admin/order/:id', async (req, res) => {
     }
 });
 
+/** Canonical catalog (paths are root-relative so they work from any page on the site). */
+const PRODUCT_CATALOG_DEFAULTS = [
+    { id: 1, name: 'Liquid Laundry', price: 600, image: '/images/sparkles-liquid-laundry-5l.png', imageAlt: 'Sparkles 5 litre blue liquid laundry detergent in a jerrycan — smart dirt removal, washing machine graphic, Nairobi Kenya', desc: 'Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.', category: 'Laundry', stock: 100 },
+    { id: 2, name: 'Hair Shampoo', price: 699, image: '/images/sparkles-hair-shampoo-5l.png', imageAlt: 'Sparkles Hair Shampoo 5 litre bulk bottle — colour care, shine and detangling, Nairobi Kenya', desc: 'Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.', category: 'Personal Care', stock: 80 },
+    { id: 3, name: 'Shower Gel', price: 749, image: '/images/sparkles-shower-gel-pink-5l.png', imageAlt: 'Sparkles Detergents pink shower gel 5 litre — moisturizing body wash, Nairobi Kenya', desc: 'Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.', category: 'Personal Care', stock: 75 },
+    { id: 4, name: 'Multi-purpose Detergent', price: 549, image: '/images/Dofoto_20260106_131334771.jpg', imageAlt: 'Sparkles multi-purpose surface detergent 5 litre — floors, tiles and kitchen tops, Kenya', desc: 'All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.', category: 'Household', stock: 90 },
+    { id: 5, name: 'Dish Washing Liquid', price: 449, image: '/images/sparkles-dishwash-lemon-5l.png', imageAlt: "Mommy D's Sparkles lemon dishwashing liquid 5 litre jug — grease-cutting kitchen soap, Kenya", desc: 'Cuts through grease instantly. Lemon fresh scent. 5 Litres.', category: 'Kitchen', stock: 120 },
+    { id: 6, name: 'Bleach', price: 499, image: '/images/Dofoto_20260105_145304900.jpg', imageAlt: 'Sparkles laundry bleach 5 litre — whitening and disinfecting, Kenya', desc: 'Strong whitening and disinfecting action. 5 Litres.', category: 'Laundry', stock: 85 },
+    { id: 7, name: 'Fabric Softener', price: 900, image: '/images/sparkles-fabric-softener-5l.png', imageAlt: 'Sparkles fabric softener 5 litre pink bottle — long-lasting floral fragrance, Kenya', desc: 'Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.', category: 'Laundry', stock: 70 }
+];
+
+function shouldRefreshProductImageUrl(url) {
+    const s = String(url || '').trim();
+    if (!s) return true;
+    if (/placehold\.co/i.test(s)) return true;
+    if (/ChatGPT\s*Image/i.test(s)) return true;
+    if (s.includes('Dofoto_')) return true;
+    return false;
+}
+
+/**
+ * Firestore product docs override the shop HTML defaults. After deploy, push new image URLs into
+ * existing docs when they still use placeholders or old filenames (keeps price/stock/name as set in admin).
+ */
+async function mergeProductMediaFromCatalog() {
+    const updated = [];
+    for (const row of PRODUCT_CATALOG_DEFAULTS) {
+        const ref = productsRef.doc(String(row.id));
+        const doc = await ref.get();
+        if (!doc.exists) continue;
+        const data = doc.data() || {};
+        const stale = shouldRefreshProductImageUrl(data.image);
+        const missingAlt = !String(data.imageAlt || '').trim();
+        if (!stale && !missingAlt) continue;
+        const updates = {};
+        if (stale) {
+            updates.image = row.image;
+            updates.imageAlt = row.imageAlt;
+        } else if (missingAlt) {
+            updates.imageAlt = row.imageAlt;
+        }
+        await ref.update(updates);
+        updated.push(row.id);
+    }
+    if (updated.length) {
+        console.log('Updated product image fields in Firestore for ids:', updated.join(', '));
+    }
+}
+
 async function seedProductsIfEmpty() {
     const snap = await productsRef.limit(1).get();
     if (!snap.empty) return;
-    const defaults = [
-        { name: "Liquid Laundry", price: 600, image: "https://placehold.co/400x600/3b82f6/ffffff?text=Laundry", desc: "Powerful stain removal for all fabrics. Gentle on hands, tough on dirt. 5 Litres.", category: "Laundry", stock: 100 },
-        { name: "Hair Shampoo", price: 699, image: "https://placehold.co/400x600/10b981/ffffff?text=Shampoo", desc: "Nourishing formula for silky smooth hair. Contains natural extracts. 5 Litres.", category: "Personal Care", stock: 80 },
-        { name: "Shower Gel", price: 749, image: "https://placehold.co/400x600/0ea5e9/ffffff?text=Shower+Gel", desc: "Refreshing and moisturizing body wash. Long lasting fragrance. 5 Litres.", category: "Personal Care", stock: 75 },
-        { name: "Multi-purpose Detergent", price: 549, image: "https://placehold.co/400x600/f59e0b/ffffff?text=Multi+Purpose", desc: "All surface cleaner for floors, tiles, and kitchen tops. 5 Litres.", category: "Household", stock: 90 },
-        { name: "Dish Washing Liquid", price: 449, image: "https://placehold.co/400x600/ef4444/ffffff?text=Dish+Wash", desc: "Cuts through grease instantly. Lemon fresh scent. 5 Litres.", category: "Kitchen", stock: 120 },
-        { name: "Bleach", price: 499, image: "https://placehold.co/400x600/6366f1/ffffff?text=Bleach", desc: "Strong whitening and disinfecting action. 5 Litres.", category: "Laundry", stock: 85 },
-        { name: "Fabric Softener", price: 900, image: "https://placehold.co/400x600/ec4899/ffffff?text=Softener", desc: "Leaves clothes soft, fluffy, and smelling amazing. 5 Litres.", category: "Laundry", stock: 70 }
-    ];
-    for (let i = 0; i < defaults.length; i++) {
-        await productsRef.doc(String(i + 1)).set({ ...defaults[i], id: i + 1 });
+    for (const row of PRODUCT_CATALOG_DEFAULTS) {
+        const { id, ...rest } = row;
+        await productsRef.doc(String(id)).set({ ...rest, id });
     }
     console.log('Seeded default products');
 }
@@ -752,12 +793,13 @@ app.get('/api/admin/products', async (req, res) => {
 
 app.post('/api/admin/products', async (req, res) => {
     try {
-        const { name, price, image, desc, category, stock } = req.body;
+        const { name, price, image, imageAlt, desc, category, stock } = req.body;
         if (!name || price == null) return res.status(400).json({ error: 'Name and price required' });
         const snap = await productsRef.orderBy('id', 'desc').limit(1).get();
         const nextId = snap.empty ? 1 : (snap.docs[0].data().id || parseInt(snap.docs[0].id)) + 1;
         const doc = {
             name, price: parseInt(price) || 0, image: image || '',
+            imageAlt: imageAlt || '',
             desc: desc || '', category: category || '', stock: parseInt(stock) || 0, id: nextId
         };
         await productsRef.doc(String(nextId)).set(doc);
@@ -770,7 +812,7 @@ app.post('/api/admin/products', async (req, res) => {
 app.put('/api/admin/products/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        const { name, price, image, desc, category, stock } = req.body;
+        const { name, price, image, imageAlt, desc, category, stock } = req.body;
         const ref = productsRef.doc(id);
         const doc = await ref.get();
         if (!doc.exists) return res.status(404).json({ error: 'Product not found' });
@@ -778,6 +820,7 @@ app.put('/api/admin/products/:id', async (req, res) => {
         if (name !== undefined) updates.name = name;
         if (price !== undefined) updates.price = parseInt(price);
         if (image !== undefined) updates.image = image;
+        if (imageAlt !== undefined) updates.imageAlt = imageAlt;
         if (desc !== undefined) updates.desc = desc;
         if (category !== undefined) updates.category = category;
         if (stock !== undefined) updates.stock = parseInt(stock);
@@ -798,7 +841,9 @@ app.delete('/api/admin/products/:id', async (req, res) => {
     }
 });
 
-seedProductsIfEmpty().catch(console.error);
+seedProductsIfEmpty()
+    .then(() => mergeProductMediaFromCatalog())
+    .catch(console.error);
 ensureDefaultAdmin().catch(console.error);
 
 app.listen(PORT, () => {
