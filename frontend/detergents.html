@@ -228,6 +228,7 @@
                     <label for="order-payment-method" class="block text-sm font-medium text-gray-700 mb-1">Payment method</label>
                     <select id="order-payment-method" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                         <option value="mpesa_till">M-Pesa — Till (Buy Goods)</option>
+                        <option value="card_paystack">Debit / credit card (Paystack)</option>
                         <option value="cash_delivery" selected>Cash on delivery</option>
                     </select>
                 </div>
@@ -386,6 +387,8 @@
 
     <script src="js/site-auth.js"></script>
     <script src="js/delivery-address.js"></script>
+    <script src="js/paystack-order-complete.js"></script>
+    <script src="js/paystack-inline.js"></script>
     <script src="js/receipt-download.js"></script>
     <script src="js/easter-offer-banner.js"></script>
     <script>
@@ -445,15 +448,11 @@
                 return;
             }
             grid.innerHTML = filterHint + list.map(p => {
-                const silk = parseInt(p.id, 10) === 9;
-                const wrapClass = silk
-                    ? 'relative h-64 sm:h-72 lg:h-[22rem] overflow-hidden bg-slate-100/90 cursor-pointer flex items-center justify-center p-2 sm:p-5'
-                    : 'relative h-56 sm:h-64 overflow-hidden bg-slate-100/90 cursor-pointer flex items-center justify-center p-3';
-                const imgClass = silk
-                    ? 'w-auto max-w-full max-h-[20rem] sm:max-h-[24rem] lg:max-h-[26rem] object-contain scale-110 sm:scale-[1.18] group-hover:scale-[1.14] sm:group-hover:scale-[1.22] transition duration-500 drop-shadow-lg'
-                    : 'w-full h-full max-h-[17rem] object-contain group-hover:scale-[1.03] transition duration-500';
+                // Silk Sheen should match the rest (no special border or oversized scaling).
+                const wrapClass = 'relative h-56 sm:h-64 overflow-hidden bg-slate-100/90 cursor-pointer flex items-center justify-center p-3';
+                const imgClass = 'w-full h-full max-h-[17rem] object-contain group-hover:scale-[1.03] transition duration-500';
                 return `
-                <div class="bg-white/95 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group border ${silk ? 'border-amber-200/90 ring-1 ring-amber-100' : 'border-blue-100/80'}">
+                <div class="bg-white/95 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col h-full group border border-blue-100/80">
                     <div class="${wrapClass}" onclick="openProductModal(${p.id})">
                         <img src="${p.image || 'https://placehold.co/400x600/3b82f6/ffffff?text=Product'}" alt="${String(p.imageAlt || (p.name + ' — Sparkles Detergents 5 litre, Kenya')).replace(/"/g, '&quot;')}" class="${imgClass}">
                         <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-blue-900 shadow-sm">5L</div>
@@ -479,6 +478,7 @@
 
         const PAYMENT_LABELS = {
             mpesa_till: 'M-Pesa (Till)',
+            card_paystack: 'Card (Paystack)',
             cash_delivery: 'Cash on delivery',
             unspecified: 'Not specified'
         };
@@ -487,6 +487,7 @@
             const walink = 'https://wa.me/254759102078';
             const map = {
                 mpesa_till: `<p><strong>M-Pesa Till — payment after delivery.</strong> When your order is delivered, pay the exact total using <strong>Buy Goods</strong> Till <strong class="font-mono text-base tracking-wide">6962655</strong>. You can add your M-Pesa confirmation code below if you like. Questions? <a href="${walink}" target="_blank" rel="noopener" class="text-green-700 font-semibold underline">WhatsApp</a>.</p>`,
+                card_paystack: `<p><strong>Pay now with card.</strong> After you tap <em>Place Order</em>, a secure Paystack window opens — Visa, Mastercard, and other cards supported. You pay the cart total in advance; we then prepare and deliver your order. If the window does not open, try again or choose another payment method.</p>`,
                 cash_delivery: `<p><strong>Cash on delivery.</strong> Pay the rider or driver when you receive your order.</p>`
             };
             return map[code] || '';
@@ -611,9 +612,7 @@
             const img = document.getElementById('modal-img');
             img.src = p.image;
             img.alt = p.imageAlt || (p.name + ' — Sparkles Detergents 5 litre, Kenya');
-            img.className = parseInt(p.id, 10) === 9
-                ? 'max-h-[24rem] md:max-h-[28rem] w-auto max-w-full object-contain drop-shadow-lg scale-110'
-                : 'max-h-[22rem] w-auto max-w-full object-contain drop-shadow-lg';
+            img.className = 'max-h-[22rem] w-auto max-w-full object-contain drop-shadow-lg';
             document.getElementById('modal-title').innerText = p.name;
             document.getElementById('modal-price').innerText = `Ksh ${p.price}`;
             document.getElementById('modal-desc').innerText = p.desc;
@@ -769,6 +768,132 @@
             }
         }
 
+        async function startPaystackCheckoutFlow(ctx) {
+            const name = ctx.name;
+            const phone = ctx.phone;
+            const email = ctx.email;
+            const shipping = ctx.shipping;
+            const cartSnapshot = ctx.cartSnapshot;
+            const paystackMode = ctx.paystackMode;
+            const orderIdBase = 'ORD-' + Date.now();
+            const total_amount = cartSnapshot.reduce((sum, item) => sum + item.price * item.qty, 0);
+            const pending = {
+                version: 1,
+                name,
+                phone,
+                email,
+                total_amount,
+                cart: cartSnapshot.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    qty: item.qty,
+                    price: item.price
+                })),
+                orderIdBase,
+                cart_subunit: Math.round(Number(total_amount) * 100),
+                shipping: Object.assign({}, shipping),
+                mode: paystackMode
+            };
+            sessionStorage.setItem('sparkles_paystack_pending', JSON.stringify(pending));
+
+            const btn = document.getElementById('order-submit-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting card payment...';
+
+            const callbackUrl = new URL('checkout-callback.html', window.location.href).href;
+            let initRes;
+            let initData;
+            try {
+                initRes = await fetch(`${API_URL}/paystack/initialize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        amount_kes: total_amount,
+                        callback_url: callbackUrl,
+                        metadata: { order_group_id: orderIdBase }
+                    })
+                });
+                initData = await initRes.json();
+            } catch (err) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                alert(`Could not reach payment server.\n\nAPI: ${API_URL}`);
+                return;
+            }
+            if (!initRes.ok || !initData.access_code) {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                alert(initData.error || 'Could not start card payment.');
+                return;
+            }
+
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+
+            try {
+                await window.sparklesPaystackResumeInline(initData.access_code, {
+                    onSuccess: async function (transaction) {
+                        let ref = '';
+                        if (transaction) {
+                            ref = String(
+                                transaction.reference ||
+                                    transaction.trxref ||
+                                    (transaction.transaction && transaction.transaction.reference) ||
+                                    ''
+                            ).trim();
+                        }
+                        if (!ref) {
+                            alert('Payment completed but reference missing. If you were charged, contact us with your email and time of payment.');
+                            return;
+                        }
+                        if (typeof window.sparklesCompletePaystackPending !== 'function') {
+                            alert('Checkout helper failed to load. Refresh and try again.');
+                            return;
+                        }
+                        const result = await window.sparklesCompletePaystackPending(API_URL, ref, pending);
+                        sessionStorage.removeItem('sparkles_paystack_pending');
+                        if (!result.ok) {
+                            alert(result.error || 'Could not save your order after payment.');
+                            return;
+                        }
+                        closeOrderModal();
+                        toggleCart();
+                        document.getElementById('receipt-customer').innerText = name;
+                        document.getElementById('receipt-date').innerText = new Date().toLocaleString();
+                        document.getElementById('receipt-items').innerHTML = cartSnapshot
+                            .map(
+                                (item) =>
+                                    `<tr><td class="py-2">${item.name}</td><td class="py-2 text-center">${item.qty}</td><td class="py-2 text-right">Ksh ${item.price * item.qty}</td></tr>`
+                            )
+                            .join('');
+                        document.getElementById('receipt-total').innerText = `Ksh ${total_amount}`;
+                        const pmLabel = PAYMENT_LABELS.card_paystack || 'Card (Paystack)';
+                        document.getElementById('receipt-payment').innerText = `${pmLabel} · Ref: ${result.paystackRef || ref}`;
+                        setReceiptShippingDisplay(shipping);
+                        if (paystackMode === 'perLine') {
+                            document.getElementById('receipt-id').innerText = '#' + orderIdBase;
+                        } else {
+                            const oid =
+                                result.orderIds && result.orderIds[0] ? result.orderIds[0] : orderIdBase;
+                            document.getElementById('receipt-id').innerText = '#' + oid;
+                        }
+                        cart = [];
+                        updateCartUI();
+                        document.getElementById('receipt-modal').classList.remove('hidden');
+                        await loadProducts();
+                    },
+                    onCancel: function () {},
+                    onError: function (err) {
+                        alert(err && err.message ? err.message : 'Card payment could not complete. Try again or choose another method.');
+                    }
+                });
+            } catch (e) {
+                alert(e.message || String(e));
+            }
+        }
+
         async function submitOrder(e) {
             e.preventDefault();
             currentUser = typeof getCustomerUser === 'function' ? getCustomerUser() : null;
@@ -796,6 +921,22 @@
                     ? window.sparklesValidateShipping(shipping)
                     : null;
             if (shipErr) return alert(shipErr);
+
+            if (payment_method === 'card_paystack') {
+                if (typeof window.sparklesPaystackResumeInline !== 'function') {
+                    return alert('Card payment script did not load. Refresh the page and try again.');
+                }
+                await startPaystackCheckoutFlow({
+                    name,
+                    phone,
+                    email,
+                    shipping,
+                    cartSnapshot: cart.map((item) => Object.assign({}, item)),
+                    paystackMode: 'singleOrder'
+                });
+                return;
+            }
+
             const btn = document.getElementById('order-submit-btn');
             const originalHtml = btn.innerHTML;
             btn.disabled = true;

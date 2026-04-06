@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 const path = require('path');
 const admin = require('firebase-admin');
 
@@ -9,10 +10,17 @@ const PORT = process.env.PORT || 3000;
 require('dotenv').config();
 
 const paystackSecretKey = (process.env.PAYSTACK_SECRET_KEY || '').trim();
+/** Paystack signs webhooks with HMAC-SHA512; dashboard secret preferred, else secret key. */
+const paystackWebhookSecret = (process.env.PAYSTACK_WEBHOOK_SECRET || paystackSecretKey || '').trim();
 if (paystackSecretKey) {
     console.log('Paystack: online card checkout enabled');
 } else {
     console.log('Paystack: disabled — set PAYSTACK_SECRET_KEY for card payments (Kenya / Paystack)');
+}
+if (paystackWebhookSecret && process.env.PAYSTACK_WEBHOOK_SECRET) {
+    console.log('Paystack webhook: verifying signatures with PAYSTACK_WEBHOOK_SECRET');
+} else if (paystackWebhookSecret) {
+    console.log('Paystack webhook: verifying signatures with PAYSTACK_SECRET_KEY (set PAYSTACK_WEBHOOK_SECRET to use dashboard secret)');
 }
 
 /** KES → Paystack amount (minor units, typically KES × 100). */
@@ -92,6 +100,33 @@ app.use(
         credentials: false
     })
 );
+
+/** Raw body required for x-paystack-signature HMAC. Must run before express.json(). */
+app.post('/api/paystack/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+    if (!paystackWebhookSecret) {
+        console.warn('Paystack webhook rejected: no PAYSTACK_WEBHOOK_SECRET or PAYSTACK_SECRET_KEY');
+        return res.status(503).send('Paystack not configured');
+    }
+    const sig = String(req.headers['x-paystack-signature'] || '');
+    const hash = crypto.createHmac('sha512', paystackWebhookSecret).update(req.body).digest('hex');
+    if (!sig || hash !== sig) {
+        console.warn('Paystack webhook: invalid or missing signature');
+        return res.status(400).send('Invalid signature');
+    }
+    let event;
+    try {
+        event = JSON.parse(req.body.toString('utf8'));
+    } catch (e) {
+        return res.status(400).send('Invalid JSON');
+    }
+    res.status(200).json({ received: true });
+    const ev = event && event.event;
+    if (ev === 'charge.success') {
+        const d = event.data || {};
+        console.log('Paystack webhook charge.success', d.reference || '', d.amount || '');
+    }
+});
+
 app.use(express.json());
 
 function sendHealth(req, res) {

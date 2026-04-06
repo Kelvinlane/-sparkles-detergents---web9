@@ -3,6 +3,7 @@
 #
 # Online card checkout (Paystack — Kenya): set on the Web Service environment:
 #   PAYSTACK_SECRET_KEY=sk_live_... or sk_test_... (from Paystack Dashboard → Settings → API)
+#   PAYSTACK_WEBHOOK_SECRET=... (Dashboard → Settings → Webhooks — used to verify x-paystack-signature; if unset, secret key is used)
 services:
   - type: web
     runtime: node
