@@ -550,18 +550,16 @@ app.post('/api/orders', async (req, res) => {
         pref = paystackRef.slice(0, 200);
     }
 
-    // ==================== Easter New Customer Offer ====================
-    // Apply 10% off only for eligible "first order" customers during the Easter period.
+    // ==================== New Customer Offer ====================
+    // Apply 10% off only for eligible first-order customers (always-on offer).
     // Eligibility: no previous orders for this customer with a different order_group_id.
     // We only apply the discount for non-card payments so Paystack amounts remain consistent.
     let offer_applied = false;
     let discount_percent = 0;
     let discounted_total_amount = originalTotalAmount;
 
-    const easterEndUtc = Date.UTC(2026, 3, 6, 20, 59, 59); // 2026-04-06 23:59:59 in Africa/Nairobi (UTC+3)
-    const nowUtc = Date.now();
     const custEmail = String(customer_email || '').trim();
-    const offerActive = nowUtc <= easterEndUtc;
+    const offerActive = true;
 
     if (
         offerActive &&
