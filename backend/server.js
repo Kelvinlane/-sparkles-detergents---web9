@@ -738,7 +738,10 @@ app.get('/api/admin/order/:id', async (req, res) => {
             return res.status(404).json({ error: 'Order not found' });
         }
         const data = doc.data();
-        res.json({ id: doc.id, ...data });
+        const created_at = data.created_at && typeof data.created_at.toDate === 'function'
+            ? data.created_at.toDate().toISOString()
+            : data.created_at;
+        res.json({ id: doc.id, ...data, created_at });
     } catch (err) {
         console.error('Admin order detail error:', err);
         res.status(500).json({ error: err.message || 'Failed to load order' });
